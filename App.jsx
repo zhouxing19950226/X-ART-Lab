@@ -58,7 +58,7 @@ function Reader({item,lang,setLang,back,toSubscribe,subscribed}){
         <p className="swiss-summary">{item[lang][1]}</p>
         <div className="swiss-body-rule"/>
         {locked?<div className="relative"><RichText text={articleBody} blurred/><div className="swiss-lock"><Lock size={20} color={red}/><b>{t.lockedTitle}</b><span>{t.lockedText}</span><button onClick={toSubscribe}>{t.subscribeCta}</button></div></div>:<RichText text={articleBody}/>}
-        <footer className="swiss-article-footer"><img src="https://zhou-xing.com/logo.png" alt="Xing Zhou"/><span>ZHOU-XING.COM</span></footer>
+        <footer className="swiss-article-footer"><img src="https://zhou-xing.com/logo.png" alt="官网 Logo"/><span>ZHOU-XING.COM</span></footer>
       </section>
     </main>
   </article>
@@ -77,7 +77,7 @@ function wrapCanvasText(context,text,maxWidth){const lines=[];for(const paragrap
 
 async function downloadArticle(item,lang){
   const {jsPDF}=await import("jspdf");
-  const articleTitle=item[lang][0],summary=item[lang][1],body=item.content?.[lang]||"",author="Xing Zhou",website="https://zhou-xing.com";
+  const articleTitle=item[lang][0],summary=item[lang][1],body=item.content?.[lang]||"";
   const width=1240,height=1754,left=112,right=102,contentWidth=width-left-right,footerTop=1515,pages=[];
   let canvas,context,y;
   const newPage=()=>{canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;context=canvas.getContext("2d");context.fillStyle="#FFFFFF";context.fillRect(0,0,width,height);context.fillStyle="#111111";y=112;pages.push({canvas,context})};
@@ -90,13 +90,13 @@ async function downloadArticle(item,lang){
   context.textAlign="right";context.font="700 66px Arial";context.fillStyle="#C81E1E";context.fillText(item.n||"01",width-right,150);context.textAlign="left";y=252;
   drawText(articleTitle,{font:"700 58px Arial",lineHeight:70,spaceAfter:28,maxWidth:contentWidth*.83});
   context.strokeStyle="#111111";context.lineWidth=3;context.beginPath();context.moveTo(left,y);context.lineTo(width-right,y);context.stroke();y+=34;
-  context.font="700 20px Arial";context.fillStyle="#111111";context.fillText(author.toUpperCase(),left,y);context.font="19px Arial";context.fillStyle="#666666";context.fillText(`${item.tag}  /  ${item.minutes} MIN`,left+310,y);y+=58;
+  context.font="19px Arial";context.fillStyle="#666666";context.fillText(`${item.tag}  /  ${item.minutes} MIN`,left,y);y+=58;
   await drawImage(item.cover_image);
   drawText(summary,{font:"italic 29px Arial",color:"#444444",lineHeight:45,spaceAfter:38,maxWidth:contentWidth*.83});
   const parts=body.split(/(!\[[^\]]*\]\([^)]+\))/g).filter(Boolean);
   for(const part of parts){const image=part.match(/^!\[([^\]]*)\]\((.+)\)$/s);if(image)await drawImage(image[2]);else drawText(part.trim(),{font:"29px Arial",lineHeight:47,spaceAfter:24,maxWidth:contentWidth*.83})}
   let logo=null;try{logo=await loadPdfImage("/api/site-logo")}catch{}
-  pages.forEach(({context:ctx},index)=>{ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke();if(logo){const logoHeight=42,logoWidth=Math.min(190,logo.width*(logoHeight/logo.height));ctx.drawImage(logo,left,footerTop+32,logoWidth,logoHeight)}ctx.textAlign="right";ctx.font="700 15px Arial";ctx.fillStyle="#111111";ctx.fillText("ZHOU-XING.COM",width-right,footerTop+53);ctx.fillStyle="#C81E1E";ctx.fillText(String(index+1).padStart(2,"0")+" / "+String(pages.length).padStart(2,"0"),width-right,footerTop+80);ctx.textAlign="left";ctx.font="16px Arial";ctx.fillStyle="#444444";const footerTitleLines=wrapCanvasText(ctx,articleTitle,contentWidth);footerTitleLines.forEach((line,lineIndex)=>ctx.fillText(line,left,footerTop+106+lineIndex*24))});
+  pages.forEach(({context:ctx},index)=>{ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke();if(logo){const logoHeight=42,logoWidth=Math.min(190,logo.width*(logoHeight/logo.height));ctx.save();ctx.filter="grayscale(1) brightness(0)";ctx.drawImage(logo,left,footerTop+32,logoWidth,logoHeight);ctx.restore()}ctx.textAlign="right";ctx.font="700 15px Arial";ctx.fillStyle="#111111";ctx.fillText("ZHOU-XING.COM",width-right,footerTop+53);ctx.fillStyle="#C81E1E";ctx.fillText(String(index+1).padStart(2,"0")+" / "+String(pages.length).padStart(2,"0"),width-right,footerTop+80);ctx.textAlign="left";ctx.font="16px Arial";ctx.fillStyle="#444444";const footerTitleLines=wrapCanvasText(ctx,articleTitle,contentWidth);footerTitleLines.forEach((line,lineIndex)=>ctx.fillText(line,left,footerTop+106+lineIndex*24))});
   const pdf=new jsPDF({orientation:"portrait",unit:"pt",format:"a4",compress:true});
   pages.forEach(({canvas:page},index)=>{if(index)pdf.addPage();pdf.addImage(page.toDataURL("image/jpeg",.9),"JPEG",0,0,595.28,841.89,undefined,"FAST")});
   pdf.save(`${articleTitle.replace(/[\\/:*?"<>|]/g,"-")}.pdf`);
@@ -121,7 +121,7 @@ const responsiveStyles=`
 .swiss-cover{display:block;width:100%;max-height:72vh;object-fit:cover;border-radius:0}
 .swiss-reader-body{width:min(760px,calc(100% - 40px));margin:0 auto;padding:clamp(42px,8vw,92px) 0 70px}.swiss-summary{margin:0 0 42px;font-size:clamp(20px,2.4vw,30px);font-weight:500;line-height:1.45;letter-spacing:-.02em}.swiss-body-rule{width:72px;height:5px;background:#c81e1e;margin-bottom:42px}.swiss-reader-body>div>p{font-size:17px!important;line-height:1.9!important;margin:0 0 26px}.swiss-reader-body img{border-radius:0!important}
 .swiss-lock{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:flex-start;padding:100px 0 8px;background:linear-gradient(180deg,transparent,#fff 48%)}.swiss-lock b{margin-top:12px;font-size:18px}.swiss-lock span{margin-top:7px;color:#777;font-size:13px}.swiss-lock button{margin-top:18px;border:0;border-radius:0;background:#111;color:#fff;padding:13px 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-.swiss-article-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:70px;padding-top:16px;border-top:2px solid #111;font-size:10px;letter-spacing:.12em}.swiss-article-footer img{display:block;width:auto;height:34px;max-width:150px;object-fit:contain;object-position:left center}.swiss-article-footer span{text-align:right}
+.swiss-article-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:70px;padding-top:16px;border-top:2px solid #111;font-size:10px;letter-spacing:.12em}.swiss-article-footer img{display:block;width:auto;height:34px;max-width:150px;object-fit:contain;object-position:left center;filter:grayscale(1) brightness(0)}.swiss-article-footer span{text-align:right}
 @media (min-width:700px){
   .xart-stage{min-height:100dvh;padding:0;background:#FAF9F4;align-items:stretch}
   .xart-device{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
