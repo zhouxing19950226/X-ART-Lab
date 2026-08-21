@@ -518,10 +518,11 @@ export default function GewuApp() {
 
   return (
     <div
-      className="w-full flex items-center justify-center"
+      className="app-shell w-full flex items-center justify-center"
       style={{ minHeight: 760, background: "#EFEDE5", padding: "32px 0" }}
     >
       <div
+        className="app-frame"
         style={{
           width: 380,
           height: 720,
