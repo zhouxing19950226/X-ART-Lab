@@ -120,7 +120,10 @@ async function downloadArticle(item,lang){
   for(const part of parts){const image=part.match(/^!\[([^\]]*)\]\((.+)\)$/s);if(image)await drawImage(image[2]);else drawRichBlock(part)}
   let logo=null;try{logo=blackLogoCanvas(await loadPdfImage(`/api/site-logo?v=${Date.now()}`))}catch{}
   pages.forEach(({context:ctx},index)=>{
-    ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke();
+    ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);
+    // Keep the running footer rule on interior pages, but omit it from the
+    // final page so a long isolated grey line never appears at the end.
+    if(index<pages.length-1){ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke()}
     const logoTop=footerTop+34,logoHeight=36,logoWidth=logo?Math.min(145,logo.width*(logoHeight/logo.height)):0,copyLeft=left+(logoWidth?logoWidth+16:0);
     if(logo)ctx.drawImage(logo,left,logoTop,logoWidth,logoHeight);
     ctx.textAlign="right";ctx.font="700 14px Arial";ctx.fillStyle="#C81E1E";ctx.fillText(String(index+1).padStart(2,"0")+" / "+String(pages.length).padStart(2,"0"),width-right,footerTop+49);
