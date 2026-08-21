@@ -84,7 +84,11 @@ export async function onRequestPost({request,env}){
   for(const code of ["zh","fr","en"])for(const field of ["title","summary","content"])body[code+"_"+field]=body[code+"_"+field]||"";
   if(!["zh","fr","en","all"].includes(body.language))return json({error:"不支持的文章语言"},400);
   for(const field of ["title","summary","content"])if(!body[body.language+"_"+field]&&body.language!=="all")return json({error:"缺少字段："+field},400);
-  if(body.language!=="all"){
+  // Existing multilingual articles may be corrected one language at a time in
+  // the editor. Keep those manual corrections and do not translate over them.
+  if(body.id){
+    body.language="all";
+  }else if(body.language!=="all"){
     if(!env.AI)return json({error:"自动翻译服务尚未绑定"},503);
     try{await translateArticle(env.AI,body)}catch(error){return json({error:"自动翻译失败，请稍后重试",detail:error.message},502)}
   }
