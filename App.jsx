@@ -113,7 +113,14 @@ async function downloadArticle(item,lang){
   const parts=body.split(/(!\[[^\]]*\]\([^)]+\))/g).filter(Boolean);
   for(const part of parts){const image=part.match(/^!\[([^\]]*)\]\((.+)\)$/s);if(image)await drawImage(image[2]);else drawText(part.trim(),{font:"29px Arial",lineHeight:47,spaceAfter:24,maxWidth:contentWidth*.83})}
   let logo=null;try{logo=blackLogoCanvas(await loadPdfImage(`/api/site-logo?v=${Date.now()}`))}catch{}
-  pages.forEach(({context:ctx},index)=>{ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke();const logoTop=footerTop+34,logoHeight=42,copyLeft=left+220;if(logo){const logoWidth=Math.min(180,logo.width*(logoHeight/logo.height));ctx.drawImage(logo,left,logoTop,logoWidth,logoHeight)}ctx.textAlign="right";ctx.font="700 15px Arial";ctx.fillStyle="#C81E1E";ctx.fillText(String(index+1).padStart(2,"0")+" / "+String(pages.length).padStart(2,"0"),width-right,footerTop+53);ctx.textAlign="left";ctx.font="700 17px Arial";ctx.fillStyle="#111111";const footerTitleLines=wrapCanvasText(ctx,articleTitle,width-right-copyLeft-110);footerTitleLines.forEach((line,lineIndex)=>ctx.fillText(line,copyLeft,footerTop+49+lineIndex*23));ctx.font="700 14px Arial";ctx.fillStyle="#444444";ctx.fillText("ZHOU-XING.COM",copyLeft,footerTop+49+footerTitleLines.length*23+5)});
+  pages.forEach(({context:ctx},index)=>{
+    ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke();
+    const logoTop=footerTop+34,logoHeight=36,logoWidth=logo?Math.min(145,logo.width*(logoHeight/logo.height)):0,copyLeft=left+(logoWidth?logoWidth+16:0);
+    if(logo)ctx.drawImage(logo,left,logoTop,logoWidth,logoHeight);
+    ctx.textAlign="right";ctx.font="700 14px Arial";ctx.fillStyle="#C81E1E";ctx.fillText(String(index+1).padStart(2,"0")+" / "+String(pages.length).padStart(2,"0"),width-right,footerTop+49);
+    ctx.textAlign="left";ctx.font="700 16px Arial";ctx.fillStyle="#111111";const footerTitleLines=wrapCanvasText(ctx,articleTitle,width-right-copyLeft-105);footerTitleLines.forEach((line,lineIndex)=>ctx.fillText(line,copyLeft,footerTop+47+lineIndex*21));
+    ctx.font="700 12px Arial";ctx.fillStyle="#555555";ctx.fillText("ZHOU-XING.COM",copyLeft,footerTop+47+footerTitleLines.length*21+3);
+  });
   const pdf=new jsPDF({orientation:"portrait",unit:"pt",format:"a4",compress:true});
   pages.forEach(({canvas:page},index)=>{if(index)pdf.addPage();pdf.addImage(page.toDataURL("image/jpeg",.9),"JPEG",0,0,595.28,841.89,undefined,"FAST")});
   pdf.save(`${articleTitle.replace(/[\\/:*?"<>|]/g,"-")}.pdf`);
