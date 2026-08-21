@@ -78,11 +78,11 @@ function wrapCanvasText(context,text,maxWidth){const lines=[];for(const paragrap
 async function downloadArticle(item,lang){
   const {jsPDF}=await import("jspdf");
   const articleTitle=item[lang][0],summary=item[lang][1],body=item.content?.[lang]||"",author="Xing Zhou",website="https://zhou-xing.com";
-  const width=1240,height=1754,left=112,right=102,contentWidth=width-left-right,footerTop=1620,pages=[];
+  const width=1240,height=1754,left=112,right=102,contentWidth=width-left-right,footerTop=1515,pages=[];
   let canvas,context,y;
-  const newPage=()=>{canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;context=canvas.getContext("2d");context.fillStyle="#FFFFFF";context.fillRect(0,0,width,height);context.strokeStyle="#E3E3E3";context.lineWidth=1;for(let column=0;column<=6;column++){const x=left+(contentWidth/6)*column;context.beginPath();context.moveTo(x,76);context.lineTo(x,footerTop-18);context.stroke()}context.fillStyle="#111111";y=112;pages.push({canvas,context})};
+  const newPage=()=>{canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;context=canvas.getContext("2d");context.fillStyle="#FFFFFF";context.fillRect(0,0,width,height);context.fillStyle="#111111";y=112;pages.push({canvas,context})};
   const ensure=space=>{if(y+space>footerTop){newPage()}};
-  const drawText=(text,{font="30px Arial",color="#111111",lineHeight=47,spaceAfter=22,maxWidth=contentWidth,x=left}={})=>{context.font=font;context.fillStyle=color;const lines=wrapCanvasText(context,text,maxWidth);for(const line of lines){ensure(lineHeight);context.fillText(line,x,y);y+=lineHeight}y+=spaceAfter};
+  const drawText=(text,{font="30px Arial",color="#111111",lineHeight=47,spaceAfter=22,maxWidth=contentWidth,x=left}={})=>{context.font=font;const lines=wrapCanvasText(context,text,maxWidth);for(const line of lines){ensure(lineHeight);context.font=font;context.fillStyle=color;context.fillText(line,x,y);y+=lineHeight}y+=spaceAfter};
   const drawImage=async src=>{if(!src)return;try{const image=await loadPdfImage(src),scale=Math.min(contentWidth/image.width,600/image.height),w=image.width*scale,h=image.height*scale;ensure(h+48);context.fillStyle="#FFFFFF";context.fillRect(left-2,y-2,w+4,h+4);context.drawImage(image,left,y,w,h);context.fillStyle="#C81E1E";context.fillRect(left,y+h+14,84,5);y+=h+48}catch{}};
   newPage();
   context.fillStyle="#C81E1E";context.fillRect(left,82,84,8);
@@ -96,7 +96,7 @@ async function downloadArticle(item,lang){
   const parts=body.split(/(!\[[^\]]*\]\([^)]+\))/g).filter(Boolean);
   for(const part of parts){const image=part.match(/^!\[([^\]]*)\]\((.+)\)$/s);if(image)await drawImage(image[2]);else drawText(part.trim(),{font:"29px Arial",lineHeight:47,spaceAfter:24,maxWidth:contentWidth*.83})}
   let logo=null;try{logo=await loadPdfImage("/icons/logo-black.svg")}catch{}
-  pages.forEach(({context:ctx},index)=>{ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke();if(logo)ctx.drawImage(logo,left,footerTop+33,38,38);ctx.fillStyle="#111111";ctx.font="700 17px Arial";ctx.fillText(author.toUpperCase(),left+54,footerTop+51);ctx.fillStyle="#5E5E5E";ctx.font="15px Arial";const shortTitle=articleTitle.length>42?articleTitle.slice(0,42)+"…":articleTitle;ctx.fillText(shortTitle,left+54,footerTop+75);ctx.textAlign="right";ctx.font="700 15px Arial";ctx.fillText("ZHOU-XING.COM",width-right,footerTop+51);ctx.fillStyle="#C81E1E";ctx.fillText(String(index+1).padStart(2,"0")+" / "+String(pages.length).padStart(2,"0"),width-right,footerTop+75);ctx.textAlign="left"});
+  pages.forEach(({context:ctx},index)=>{ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke();if(logo)ctx.drawImage(logo,left,footerTop+34,44,44);ctx.fillStyle="#111111";ctx.font="700 17px Arial";ctx.fillText(author.toUpperCase(),left+62,footerTop+53);ctx.textAlign="right";ctx.font="700 15px Arial";ctx.fillText("ZHOU-XING.COM",width-right,footerTop+53);ctx.fillStyle="#C81E1E";ctx.fillText(String(index+1).padStart(2,"0")+" / "+String(pages.length).padStart(2,"0"),width-right,footerTop+80);ctx.textAlign="left";ctx.font="16px Arial";ctx.fillStyle="#444444";const footerTitleLines=wrapCanvasText(ctx,articleTitle,contentWidth-62);footerTitleLines.forEach((line,lineIndex)=>ctx.fillText(line,left+62,footerTop+84+lineIndex*24))});
   const pdf=new jsPDF({orientation:"portrait",unit:"pt",format:"a4",compress:true});
   pages.forEach(({canvas:page},index)=>{if(index)pdf.addPage();pdf.addImage(page.toDataURL("image/jpeg",.9),"JPEG",0,0,595.28,841.89,undefined,"FAST")});
   pdf.save(`${articleTitle.replace(/[\\/:*?"<>|]/g,"-")}.pdf`);
@@ -114,7 +114,7 @@ const responsiveStyles=`
 .swiss-reader-header>button{display:flex;align-items:center;gap:5px;justify-self:start;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .swiss-reader-header>.flex{justify-self:end}.swiss-reader-brand{text-align:center;line-height:1.05}.swiss-reader-brand b{display:block;font-size:15px;letter-spacing:.04em}.swiss-reader-brand small{font-size:7px;letter-spacing:.18em;color:#777}
 .swiss-reader-scroll{flex:1;overflow-y:auto;background:#fff}
-.swiss-reader-hero{position:relative;padding:clamp(36px,7vw,88px) clamp(20px,7vw,92px) clamp(42px,8vw,96px);background-image:repeating-linear-gradient(90deg,transparent 0,transparent calc(16.666% - 1px),#eeeeeb calc(16.666% - 1px),#eeeeeb 16.666%)}
+.swiss-reader-hero{position:relative;padding:clamp(36px,7vw,88px) clamp(20px,7vw,92px) clamp(42px,8vw,96px);background:#fff}
 .swiss-red-rule{width:72px;height:6px;background:#c81e1e;margin-bottom:34px}.swiss-meta{display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;border-top:2px solid #111;padding-top:12px;font-size:11px;letter-spacing:.12em}.swiss-meta b{font-size:34px;line-height:1;color:#c81e1e}.swiss-meta span:last-child{text-align:right}
 .swiss-reader-hero h1{max-width:980px;margin:clamp(34px,7vw,78px) 0 46px;font-size:clamp(38px,7vw,92px);font-weight:800;letter-spacing:-.055em;line-height:.98}
 .swiss-byline{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #111;padding-top:13px;font-size:10px;letter-spacing:.12em}.swiss-byline span{text-align:right}
@@ -128,7 +128,7 @@ const responsiveStyles=`
   .xart-device header,.xart-device main,.xart-device footer{padding-left:max(32px,env(safe-area-inset-left));padding-right:max(32px,env(safe-area-inset-right))}
   .xart-device main{scrollbar-gutter:stable}
 }
-@media (max-width:699px){.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-reader-hero{background-image:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),#eeeeeb calc(25% - 1px),#eeeeeb 25%)}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 36px}.swiss-byline{grid-template-columns:1fr}.swiss-byline span{display:none}.swiss-reader-body{width:calc(100% - 40px)}}
+@media (max-width:699px){.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 36px}.swiss-byline{grid-template-columns:1fr}.swiss-byline span{display:none}.swiss-reader-body{width:calc(100% - 40px)}}
 `;
 
 export default function App(){
