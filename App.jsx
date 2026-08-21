@@ -117,7 +117,15 @@ async function downloadArticle(item,lang){
   await drawImage(item.cover_image);
   drawText(summary,{font:"italic 29px Arial",color:"#444444",lineHeight:45,spaceAfter:38,maxWidth:contentWidth*.83});
   const parts=body.split(/(!\[[^\]]*\]\([^)]+\)|\n\s*\n)/g).filter(part=>part&&!/^\n+$/.test(part));
-  for(const part of parts){const image=part.match(/^!\[([^\]]*)\]\((.+)\)$/s);if(image)await drawImage(image[2]);else drawRichBlock(part)}
+  for(let partIndex=0;partIndex<parts.length;partIndex++){
+    const part=parts[partIndex],image=part.match(/^!\[([^\]]*)\]\((.+)\)$/s);
+    const nextText=cleanPdfInline(parts[partIndex+1]||"").replace(/^#{1,2}\s*/,"").trim();
+    const beginsSources=/^(?:学术来源|来源与延伸阅读|来源|critical source|further reading|sources?|source critique|références?)/i.test(nextText);
+    // A Markdown divider immediately before the bibliography creates an
+    // unnecessary long grey rule. The section heading already separates it.
+    if(/^\s*---+\s*$/.test(part)&&beginsSources)continue;
+    if(image)await drawImage(image[2]);else drawRichBlock(part)
+  }
   let logo=null;try{logo=blackLogoCanvas(await loadPdfImage(`/api/site-logo?v=${Date.now()}`))}catch{}
   pages.forEach(({context:ctx},index)=>{
     ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);
