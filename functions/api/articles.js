@@ -21,7 +21,16 @@ async function translateRich(ai,text,source,target){
   const output=[];
   for(const part of parts){
     if(/^\n+$/.test(part)||/^!\[[^\]]*\]\([^)]+\)$/.test(part))output.push(part);
-    else output.push(await translatePlain(ai,part,source,target));
+    else{
+      const prefix=part.match(/^(#{1,2}\s+|>\s+|-\s+|\d+\.\s+)/)?.[0]||"",content=part.slice(prefix.length),segments=content.split(/(\*\*[^*]+\*\*|_[^_]+_|\[[^\]]+\]\([^)]+\))/g).filter(Boolean),translated=[];
+      for(const segment of segments){
+        let match=segment.match(/^\*\*([^*]+)\*\*$/);if(match){translated.push(`**${await translatePlain(ai,match[1],source,target)}**`);continue}
+        match=segment.match(/^_([^_]+)_$/);if(match){translated.push(`_${await translatePlain(ai,match[1],source,target)}_`);continue}
+        match=segment.match(/^\[([^\]]+)\]\(([^)]+)\)$/);if(match){translated.push(`[${await translatePlain(ai,match[1],source,target)}](${match[2]})`);continue}
+        translated.push(await translatePlain(ai,segment,source,target));
+      }
+      output.push(prefix+translated.join(""));
+    }
   }
   return output.join("");
 }
