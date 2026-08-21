@@ -6,7 +6,7 @@ const languageNames={zh:"chinese",fr:"french",en:"english"};
 const stripEditorialNote=value=>{
   const blocks=String(value||"").trimEnd().split(/\n\s*\n/);
   const last=(blocks.at(-1)||"").replace(/[\*_]/g,"").toLowerCase();
-  if(last.includes("x-art lab")&&/(原创|撰写|不复制|original|rédig|reprodu|written|copy)/i.test(last))blocks.pop();
+  if(last.includes("x-art lab"))blocks.pop();
   return blocks.join("\n\n").trimEnd();
 };
 
