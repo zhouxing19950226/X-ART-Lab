@@ -54,22 +54,25 @@ function wrapCanvasText(context,text,maxWidth){const lines=[];for(const paragrap
 async function downloadArticle(item,lang){
   const {jsPDF}=await import("jspdf");
   const articleTitle=item[lang][0],summary=item[lang][1],body=item.content?.[lang]||"",author="Xing Zhou",website="https://zhou-xing.com";
-  const width=1240,height=1754,left=105,right=105,contentWidth=width-left-right,footerTop=1635,pages=[];
+  const width=1240,height=1754,left=112,right=102,contentWidth=width-left-right,footerTop=1620,pages=[];
   let canvas,context,y;
-  const newPage=()=>{canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;context=canvas.getContext("2d");context.fillStyle="#FAF9F4";context.fillRect(0,0,width,height);context.fillStyle="#141311";y=105;pages.push({canvas,context})};
+  const newPage=()=>{canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;context=canvas.getContext("2d");context.fillStyle="#FFFFFF";context.fillRect(0,0,width,height);context.strokeStyle="#E3E3E3";context.lineWidth=1;for(let column=0;column<=6;column++){const x=left+(contentWidth/6)*column;context.beginPath();context.moveTo(x,76);context.lineTo(x,footerTop-18);context.stroke()}context.fillStyle="#111111";y=112;pages.push({canvas,context})};
   const ensure=space=>{if(y+space>footerTop){newPage()}};
-  const drawText=(text,{font="32px Arial",color="#141311",lineHeight=50,spaceAfter=18}={})=>{context.font=font;context.fillStyle=color;const lines=wrapCanvasText(context,text,contentWidth);for(const line of lines){ensure(lineHeight);context.fillText(line,left,y);y+=lineHeight}y+=spaceAfter};
-  const drawImage=async src=>{if(!src)return;try{const image=await loadPdfImage(src),scale=Math.min(contentWidth/image.width,620/image.height),w=image.width*scale,h=image.height*scale;ensure(h+34);context.drawImage(image,left,y,w,h);y+=h+34}catch{}};
+  const drawText=(text,{font="30px Arial",color="#111111",lineHeight=47,spaceAfter=22,maxWidth=contentWidth,x=left}={})=>{context.font=font;context.fillStyle=color;const lines=wrapCanvasText(context,text,maxWidth);for(const line of lines){ensure(lineHeight);context.fillText(line,x,y);y+=lineHeight}y+=spaceAfter};
+  const drawImage=async src=>{if(!src)return;try{const image=await loadPdfImage(src),scale=Math.min(contentWidth/image.width,600/image.height),w=image.width*scale,h=image.height*scale;ensure(h+48);context.fillStyle="#FFFFFF";context.fillRect(left-2,y-2,w+4,h+4);context.drawImage(image,left,y,w,h);context.fillStyle="#C81E1E";context.fillRect(left,y+h+14,84,5);y+=h+48}catch{}};
   newPage();
-  context.font="700 22px Arial";context.fillStyle="#C81E1E";context.fillText("X-ART LAB · CONTEMPORARY ART RESEARCH",left,y);y+=62;
-  drawText(articleTitle,{font:"700 52px Arial",lineHeight:66,spaceAfter:20});
-  context.font="22px Arial";context.fillStyle="#77736A";context.fillText(`${author} · ${item.tag} · ${item.minutes} min`,left,y);y+=52;
+  context.fillStyle="#C81E1E";context.fillRect(left,82,84,8);
+  context.font="700 20px Arial";context.fillStyle="#111111";context.fillText("X-ART LAB",left,132);context.font="18px Arial";context.fillStyle="#666666";context.fillText("CONTEMPORARY ART RESEARCH",left,163);
+  context.textAlign="right";context.font="700 66px Arial";context.fillStyle="#C81E1E";context.fillText(item.n||"01",width-right,150);context.textAlign="left";y=252;
+  drawText(articleTitle,{font:"700 58px Arial",lineHeight:70,spaceAfter:28,maxWidth:contentWidth*.83});
+  context.strokeStyle="#111111";context.lineWidth=3;context.beginPath();context.moveTo(left,y);context.lineTo(width-right,y);context.stroke();y+=34;
+  context.font="700 20px Arial";context.fillStyle="#111111";context.fillText(author.toUpperCase(),left,y);context.font="19px Arial";context.fillStyle="#666666";context.fillText(`${item.tag}  /  ${item.minutes} MIN`,left+310,y);y+=58;
   await drawImage(item.cover_image);
-  drawText(summary,{font:"italic 30px Arial",color:"#5F5C55",lineHeight:46,spaceAfter:30});
+  drawText(summary,{font:"italic 29px Arial",color:"#444444",lineHeight:45,spaceAfter:38,maxWidth:contentWidth*.83});
   const parts=body.split(/(!\[[^\]]*\]\([^)]+\))/g).filter(Boolean);
-  for(const part of parts){const image=part.match(/^!\[([^\]]*)\]\((.+)\)$/s);if(image)await drawImage(image[2]);else drawText(part.trim(),{font:"30px Arial",lineHeight:48,spaceAfter:20})}
-  let logo=null;try{logo=await loadPdfImage("/icons/icon-192.png")}catch{}
-  pages.forEach(({context:ctx},index)=>{ctx.strokeStyle="#D8D5CC";ctx.beginPath();ctx.moveTo(left,footerTop+18);ctx.lineTo(width-right,footerTop+18);ctx.stroke();if(logo)ctx.drawImage(logo,left,footerTop+38,42,42);ctx.fillStyle="#141311";ctx.font="700 18px Arial";ctx.fillText(author,left+58,footerTop+55);ctx.fillStyle="#77736A";ctx.font="16px Arial";const shortTitle=articleTitle.length>48?articleTitle.slice(0,48)+"…":articleTitle;ctx.fillText(shortTitle,left+58,footerTop+79);ctx.textAlign="right";ctx.fillText(website,width-right,footerTop+55);ctx.fillText(`${index+1} / ${pages.length}`,width-right,footerTop+79);ctx.textAlign="left"});
+  for(const part of parts){const image=part.match(/^!\[([^\]]*)\]\((.+)\)$/s);if(image)await drawImage(image[2]);else drawText(part.trim(),{font:"29px Arial",lineHeight:47,spaceAfter:24,maxWidth:contentWidth*.83})}
+  let logo=null;try{logo=await loadPdfImage("/icons/logo-black.svg")}catch{}
+  pages.forEach(({context:ctx},index)=>{ctx.fillStyle="#FFFFFF";ctx.fillRect(0,footerTop-8,width,height-footerTop+8);ctx.strokeStyle="#111111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(left,footerTop+12);ctx.lineTo(width-right,footerTop+12);ctx.stroke();if(logo)ctx.drawImage(logo,left,footerTop+33,38,38);ctx.fillStyle="#111111";ctx.font="700 17px Arial";ctx.fillText(author.toUpperCase(),left+54,footerTop+51);ctx.fillStyle="#5E5E5E";ctx.font="15px Arial";const shortTitle=articleTitle.length>42?articleTitle.slice(0,42)+"…":articleTitle;ctx.fillText(shortTitle,left+54,footerTop+75);ctx.textAlign="right";ctx.font="700 15px Arial";ctx.fillText("ZHOU-XING.COM",width-right,footerTop+51);ctx.fillStyle="#C81E1E";ctx.fillText(String(index+1).padStart(2,"0")+" / "+String(pages.length).padStart(2,"0"),width-right,footerTop+75);ctx.textAlign="left"});
   const pdf=new jsPDF({orientation:"portrait",unit:"pt",format:"a4",compress:true});
   pages.forEach(({canvas:page},index)=>{if(index)pdf.addPage();pdf.addImage(page.toDataURL("image/jpeg",.9),"JPEG",0,0,595.28,841.89,undefined,"FAST")});
   pdf.save(`${articleTitle.replace(/[\\/:*?"<>|]/g,"-")}.pdf`);
