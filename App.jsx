@@ -34,7 +34,6 @@ function Discover({lang,setLang,open,items}){
         {query&&<button onClick={()=>setQuery("")} aria-label={lang==="zh"?"清除搜索":lang==="fr"?"Effacer la recherche":"Clear search"} style={{fontSize:18,color:muted,lineHeight:1}}>×</button>}
       </label>
     </header>
-    <section className="px-5 pt-5 pb-2"><Eye>{t.issue}</Eye><h1 style={{fontSize:20,fontWeight:800,marginTop:6}}>{t.issueTitle}</h1><p style={{fontSize:12,color:muted,marginTop:4}}>{t.issueMeta}</p></section>
     <main className="flex-1 overflow-y-auto px-5 pb-6">{results.map(p=><button key={p.id||p.n} onClick={()=>open(p)} className="w-full text-left" style={{padding:"16px 0",borderBottom:`1px solid ${hairline}`}}>{p.cover_image&&<img src={p.cover_image} alt="" style={{width:"100%",height:180,objectFit:"cover",borderRadius:8,marginBottom:14}}/>}<div className="flex gap-3"><b style={{fontSize:12,color:red,minWidth:20}}>{p.n}</b><div><div style={{fontSize:10,fontWeight:700,color:muted,letterSpacing:".1em"}}>{p.tag}</div><div style={{fontSize:15,fontWeight:700,marginTop:4,lineHeight:1.4}}>{p[lang][0]}</div><div style={{fontSize:12,color:muted,marginTop:6,lineHeight:1.5}}>{p[lang][1]}</div><div className="flex gap-2" style={{marginTop:8,fontSize:11,color:muted}}><span>{p.minutes} {t.read}</span>{p.locked&&<span className="flex items-center gap-1" style={{color:red}}><Lock size={10}/>{t.unlock}</span>}</div></div></div></button>)}{results.length===0&&<div style={{padding:"40px 0",textAlign:"center",fontSize:13,color:muted}}>{emptyText}</div>}</main>
   </div>
 }
