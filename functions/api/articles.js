@@ -17,22 +17,23 @@ async function translatePlain(ai,text,source,target){
 }
 
 async function translateRich(ai,text,source,target){
-  const parts=text.split(/(\n+|!\[[^\]]*\]\([^)]+\))/g);
-  const output=[];
-  for(const part of parts){
-    if(/^\n+$/.test(part)||/^!\[[^\]]*\]\([^)]+\)$/.test(part))output.push(part);
-    else{
-      const prefix=part.match(/^(#{1,2}\s+|>\s+|-\s+|\d+\.\s+)/)?.[0]||"",content=part.slice(prefix.length),segments=content.split(/(\*\*[^*]+\*\*|_[^_]+_|\[[^\]]+\]\([^)]+\))/g).filter(Boolean),translated=[];
-      for(const segment of segments){
-        let match=segment.match(/^\*\*([^*]+)\*\*$/);if(match){translated.push(`**${await translatePlain(ai,match[1],source,target)}**`);continue}
-        match=segment.match(/^_([^_]+)_$/);if(match){translated.push(`_${await translatePlain(ai,match[1],source,target)}_`);continue}
-        match=segment.match(/^\[([^\]]+)\]\(([^)]+)\)$/);if(match){translated.push(`[${await translatePlain(ai,match[1],source,target)}](${match[2]})`);continue}
-        translated.push(await translatePlain(ai,segment,source,target));
-      }
-      output.push(prefix+translated.join(""));
-    }
+  // Translate several paragraphs per AI request. The old implementation made one
+  // request for every Markdown fragment and exceeded the Workers subrequest limit
+  // on long articles. URLs are replaced temporarily so the translator cannot alter
+  // them; headings, lists and paragraph breaks are kept in the batched text.
+  const urls=[];
+  const protectedText=text.replace(/https?:\/\/[^\s)]+/g,url=>`URLTOKEN${urls.push(url)-1}ENDTOKEN`);
+  const blocks=protectedText.split(/(\n{2,})/);
+  const batches=[];
+  let batch="";
+  for(const block of blocks){
+    if(batch&&batch.length+block.length>1100){batches.push(batch);batch=""}
+    batch+=block;
   }
-  return output.join("");
+  if(batch)batches.push(batch);
+  const translated=[];
+  for(const item of batches)translated.push(await translatePlain(ai,item,source,target));
+  return translated.join("").replace(/URLTOKEN\s*(\d+)\s*ENDTOKEN/gi,(_,index)=>urls[Number(index)]||"");
 }
 
 async function translateArticle(ai,body){
