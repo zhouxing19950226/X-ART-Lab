@@ -2,6 +2,36 @@ const columns=["n","tag","minutes","locked","published","language","cover_image"
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json;charset=UTF-8","cache-control":"no-store"}});
 const authorized=(request,env)=>Boolean(env.ADMIN_TOKEN)&&request.headers.get("Authorization")===`Bearer ${env.ADMIN_TOKEN}`;
+const languageNames={zh:"chinese",fr:"french",en:"english"};
+
+async function translatePlain(ai,text,source,target){
+  if(!text.trim())return "";
+  const chunks=[];
+  for(let start=0;start<text.length;start+=1400)chunks.push(text.slice(start,start+1400));
+  const translated=[];
+  for(const chunk of chunks){
+    const result=await ai.run("@cf/meta/m2m100-1.2b",{text:chunk,source_lang:languageNames[source],target_lang:languageNames[target]});
+    translated.push(result.translated_text||result.translation||"");
+  }
+  return translated.join("");
+}
+
+async function translateRich(ai,text,source,target){
+  const parts=text.split(/(!\[[^\]]*\]\([^)]+\))/g);
+  const output=[];
+  for(const part of parts)output.push(/^!\[[^\]]*\]\([^)]+\)$/.test(part)?part:await translatePlain(ai,part,source,target));
+  return output.join("");
+}
+
+async function translateArticle(ai,body){
+  const source=body.language;
+  for(const target of ["zh","fr","en"].filter(code=>code!==source)){
+    body[target+"_title"]=await translatePlain(ai,body[source+"_title"],source,target);
+    body[target+"_summary"]=await translatePlain(ai,body[source+"_summary"],source,target);
+    body[target+"_content"]=await translateRich(ai,body[source+"_content"],source,target);
+  }
+  body.language="all";
+}
 
 async function initialize(db){
   await db.prepare(`CREATE TABLE IF NOT EXISTS articles (
@@ -41,6 +71,10 @@ export async function onRequestPost({request,env}){
   for(const code of ["zh","fr","en"])for(const field of ["title","summary","content"])body[code+"_"+field]=body[code+"_"+field]||"";
   if(!["zh","fr","en","all"].includes(body.language))return json({error:"不支持的文章语言"},400);
   for(const field of ["title","summary","content"])if(!body[body.language+"_"+field]&&body.language!=="all")return json({error:"缺少字段："+field},400);
+  if(body.language!=="all"){
+    if(!env.AI)return json({error:"自动翻译服务尚未绑定"},503);
+    try{await translateArticle(env.AI,body)}catch(error){return json({error:"自动翻译失败，请稍后重试",detail:error.message},502)}
+  }
   for(const key of columns)if(body[key]===undefined||body[key]===null)return json({error:`缺少字段：${key}`},400);
   const values=columns.map(key=>["locked","published"].includes(key)?(body[key]?1:0):body[key]);
   if(body.id){
