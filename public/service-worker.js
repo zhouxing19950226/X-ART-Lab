@@ -1,4 +1,4 @@
-const CACHE_NAME = "x-art-lab-v4";
+const CACHE_NAME = "x-art-lab-v6";
 const APP_SHELL = ["/", "/manifest.webmanifest?v=2", "/icons/icon-192.png?v=2", "/icons/icon-512.png?v=2"];
 
 self.addEventListener("install", (event) => {
@@ -16,17 +16,18 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);\n  if (event.request.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
+  const url = new URL(event.request.url);
+  if (event.request.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
 
-  if (event.request.mode === "navigate") {
+  if (event.request.mode === "navigate" || url.pathname.endsWith(".js") || url.pathname.endsWith(".css")) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request.mode === "navigate" ? "/" : event.request, copy));
           return response;
         })
-        .catch(() => caches.match("/"))
+        .catch(() => caches.match(event.request.mode === "navigate" ? "/" : event.request))
     );
     return;
   }
