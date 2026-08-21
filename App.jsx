@@ -174,7 +174,7 @@ const responsiveStyles=`
   .xart-device header,.xart-device main,.xart-device footer{padding-left:max(32px,env(safe-area-inset-left));padding-right:max(32px,env(safe-area-inset-right))}
   .xart-device main{scrollbar-gutter:stable}
 }
-@media (max-width:699px){.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-reader-toolbar{justify-content:flex-start;gap:8px;padding:7px 14px;overflow-x:auto}.swiss-tool-group{gap:3px;flex:0 0 auto}.swiss-tool-group button{padding:0 7px}.swiss-tool-actions{margin-left:0}.swiss-tool-actions button span{display:none}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 0}.swiss-reader-body{width:calc(100% - 40px)}.swiss-article-footer{gap:12px}.swiss-footer-copy{gap:1px}}
+@media (max-width:699px){.xart-splash{padding-bottom:10vh}.xart-splash img{width:min(36vw,150px)}.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-reader-toolbar{justify-content:flex-start;gap:8px;padding:7px 14px;overflow-x:auto}.swiss-tool-group{gap:3px;flex:0 0 auto}.swiss-tool-group button{padding:0 7px}.swiss-tool-actions{margin-left:0}.swiss-tool-actions button span{display:none}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 0}.swiss-reader-body{width:calc(100% - 40px)}.swiss-article-footer{gap:12px}.swiss-footer-copy{gap:1px}}
 `;
 
 export default function App(){
