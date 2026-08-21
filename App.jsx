@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Compass, BookMarked, CreditCard, User, Lock, ChevronLeft, Search, Check } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Compass, BookMarked, CreditCard, User, Lock, ChevronLeft, Search, Check, Minus, Plus, Share2, Download } from "lucide-react";
 import Admin from "./Admin.jsx";
 
 const ink="#141311", paper="#FAF9F4", red="#C81E1E", muted="#8C897D", hairline="#E3E0D5";
@@ -39,14 +39,25 @@ function Discover({lang,setLang,open,items}){
 }
 
 function Reader({item,lang,setLang,back,toSubscribe,subscribed}){
-  const t=ui[lang],locked=item.locked&&!subscribed,articleBody=item.content?.[lang]||t.body;
+  const t=ui[lang],locked=item.locked&&!subscribed,articleBody=item.content?.[lang]||t.body,scrollRef=useRef(null);
+  const[fontScale,setFontScale]=useState(()=>Number(localStorage.getItem("xart-reader-scale"))||1),[progress,setProgress]=useState(0),[notice,setNotice]=useState("");
+  const labels=lang==="zh"?{smaller:"缩小字号",larger:"放大字号",share:"分享",download:"下载 PDF",copied:"链接已复制"}:lang==="fr"?{smaller:"Réduire le texte",larger:"Agrandir le texte",share:"Partager",download:"Télécharger le PDF",copied:"Lien copié"}:{smaller:"Decrease text size",larger:"Increase text size",share:"Share",download:"Download PDF",copied:"Link copied"};
+  const resize=amount=>setFontScale(current=>{const next=Math.max(.85,Math.min(1.3,Math.round((current+amount)*100)/100));localStorage.setItem("xart-reader-scale",next);return next});
+  const updateProgress=event=>{const element=event.currentTarget,max=element.scrollHeight-element.clientHeight;setProgress(max>0?Math.min(100,Math.max(0,element.scrollTop/max*100)):0)};
+  const share=async()=>{const data={title:item[lang][0],text:item[lang][1],url:location.href};try{if(navigator.share)await navigator.share(data);else{await navigator.clipboard.writeText(location.href);setNotice(labels.copied);setTimeout(()=>setNotice(""),1800)}}catch{}};
   return <article className="swiss-reader">
     <header className="swiss-reader-header">
       <button onClick={back} aria-label={t.back}><ChevronLeft size={20}/><span>{t.back}</span></button>
       <div className="swiss-reader-brand"><b>X-ART LAB</b><small>CONTEMPORARY ART RESEARCH</small></div>
       <Lang lang={lang} setLang={setLang}/>
     </header>
-    <main className="swiss-reader-scroll">
+    <div className="swiss-reader-toolbar">
+      <div className="swiss-progress" aria-hidden="true"><i style={{width:`${progress}%`}}/></div>
+      <div className="swiss-tool-group"><button onClick={()=>resize(-.1)} aria-label={labels.smaller} title={labels.smaller}><Minus size={15}/><span>A</span></button><b>{Math.round(fontScale*100)}%</b><button onClick={()=>resize(.1)} aria-label={labels.larger} title={labels.larger}><Plus size={15}/><span>A</span></button></div>
+      <div className="swiss-tool-group swiss-tool-actions"><button onClick={share} aria-label={labels.share} title={labels.share}><Share2 size={15}/><span>{labels.share}</span></button><button onClick={()=>locked?toSubscribe():downloadArticle(item,lang)} aria-label={locked?t.unlock:labels.download} title={locked?t.unlock:labels.download}>{locked?<Lock size={14}/>:<Download size={15}/>}<span>PDF</span></button></div>
+      {notice&&<div className="swiss-reader-notice" role="status">{notice}</div>}
+    </div>
+    <main ref={scrollRef} onScroll={updateProgress} className="swiss-reader-scroll" style={{"--reader-body-size":`${17*fontScale}px`,"--reader-summary-size":`${24*fontScale}px`}}>
       <section className="swiss-reader-hero">
         <div className="swiss-red-rule"/>
         <div className="swiss-meta"><b>{item.n}</b><span>{item.tag}</span><span>{item.minutes} {t.read}</span></div>
@@ -114,11 +125,12 @@ const responsiveStyles=`
 .swiss-reader-header>button{display:flex;align-items:center;gap:5px;justify-self:start;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .swiss-reader-header>.flex{justify-self:end}.swiss-reader-brand{text-align:center;line-height:1.05}.swiss-reader-brand b{display:block;font-size:15px;letter-spacing:.04em}.swiss-reader-brand small{font-size:7px;letter-spacing:.18em;color:#777}
 .swiss-reader-scroll{flex:1;overflow-y:auto;background:#fff}
+.swiss-reader-toolbar{position:relative;min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 clamp(18px,4vw,52px);border-bottom:1px solid #ddd;background:#fff}.swiss-progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:transparent}.swiss-progress i{display:block;height:100%;background:#c81e1e;transition:width .12s linear}.swiss-tool-group{display:flex;align-items:center;gap:5px}.swiss-tool-group button{height:30px;display:flex;align-items:center;gap:3px;padding:0 8px;border:1px solid #ddd;background:#fff;color:#111;font-size:10px;font-weight:700;letter-spacing:.04em}.swiss-tool-group button:hover{border-color:#111}.swiss-tool-group>b{min-width:38px;text-align:center;font-size:9px;color:#777}.swiss-tool-actions{margin-left:auto}.swiss-reader-notice{position:absolute;right:clamp(18px,4vw,52px);top:52px;z-index:5;padding:8px 12px;background:#111;color:#fff;font-size:10px;letter-spacing:.05em}
 .swiss-reader-hero{position:relative;padding:clamp(36px,7vw,88px) clamp(20px,7vw,92px) clamp(42px,8vw,96px);background:#fff}
 .swiss-red-rule{width:72px;height:6px;background:#c81e1e;margin-bottom:34px}.swiss-meta{display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;border-top:2px solid #111;padding-top:12px;font-size:11px;letter-spacing:.12em}.swiss-meta b{font-size:34px;line-height:1;color:#c81e1e}.swiss-meta span:last-child{text-align:right}
 .swiss-reader-hero h1{max-width:980px;margin:clamp(34px,7vw,78px) 0 0;font-size:clamp(38px,7vw,92px);font-weight:800;letter-spacing:-.055em;line-height:.98}
 .swiss-cover{display:block;width:100%;max-height:72vh;object-fit:cover;border-radius:0}
-.swiss-reader-body{width:min(760px,calc(100% - 40px));margin:0 auto;padding:clamp(42px,8vw,92px) 0 70px}.swiss-summary{margin:0 0 42px;font-size:clamp(20px,2.4vw,30px);font-weight:500;line-height:1.45;letter-spacing:-.02em}.swiss-body-rule{width:72px;height:5px;background:#c81e1e;margin-bottom:42px}.swiss-reader-body>div>p{font-size:17px!important;line-height:1.9!important;margin:0 0 26px}.swiss-reader-body img{border-radius:0!important}
+.swiss-reader-body{width:min(760px,calc(100% - 40px));margin:0 auto;padding:clamp(42px,8vw,92px) 0 70px}.swiss-summary{margin:0 0 42px;font-size:var(--reader-summary-size);font-weight:500;line-height:1.45;letter-spacing:-.02em}.swiss-body-rule{width:72px;height:5px;background:#c81e1e;margin-bottom:42px}.swiss-reader-body>div>p{font-size:var(--reader-body-size)!important;line-height:1.9!important;margin:0 0 26px}.swiss-reader-body img{border-radius:0!important}
 .swiss-lock{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:flex-start;padding:100px 0 8px;background:linear-gradient(180deg,transparent,#fff 48%)}.swiss-lock b{margin-top:12px;font-size:18px}.swiss-lock span{margin-top:7px;color:#777;font-size:13px}.swiss-lock button{margin-top:18px;border:0;border-radius:0;background:#111;color:#fff;padding:13px 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .swiss-article-footer{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:18px;margin-top:70px;padding-top:16px;border-top:2px solid #111;font-size:10px;letter-spacing:.08em}.swiss-article-footer img{display:block;width:auto;height:34px;max-width:150px;object-fit:contain;object-position:left center;filter:grayscale(1) brightness(0)}.swiss-footer-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px}.swiss-footer-title{font-weight:700;line-height:1.45;overflow-wrap:anywhere}.swiss-footer-site{white-space:nowrap;line-height:1.3;color:#555}
 @media (min-width:700px){
@@ -127,7 +139,7 @@ const responsiveStyles=`
   .xart-device header,.xart-device main,.xart-device footer{padding-left:max(32px,env(safe-area-inset-left));padding-right:max(32px,env(safe-area-inset-right))}
   .xart-device main{scrollbar-gutter:stable}
 }
-@media (max-width:699px){.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 0}.swiss-reader-body{width:calc(100% - 40px)}.swiss-article-footer{gap:12px}.swiss-footer-copy{gap:1px}}
+@media (max-width:699px){.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-reader-toolbar{gap:8px;padding:0 14px}.swiss-tool-group{gap:3px}.swiss-tool-group button{padding:0 7px}.swiss-tool-actions button span{display:none}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 0}.swiss-reader-body{width:calc(100% - 40px)}.swiss-article-footer{gap:12px}.swiss-footer-copy{gap:1px}}
 `;
 
 export default function App(){
