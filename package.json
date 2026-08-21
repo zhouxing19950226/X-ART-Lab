@@ -1,5 +1,5 @@
 {
-  "name": "gewu-app",
+  "name": "x-art-lab",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name=gewu-app"
+    "deploy": "npm run build && wrangler pages deploy dist --project-name=x-art-lab"
   },
   "dependencies": {
     "lucide-react": "^0.383.0",
