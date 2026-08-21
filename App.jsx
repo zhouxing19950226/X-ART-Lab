@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Compass,
   BookMarked,
@@ -68,9 +68,9 @@ const plans = [
     id: "yearly",
     name: "年度",
     nameEn: "YEARLY",
-    price: "¥268",
+    price: "¥298",
     period: "/ 年",
-    note: "相当于 ¥22 / 月",
+    note: "相当于约 ¥25 / 月",
     recommended: true,
   },
   {
@@ -287,8 +287,33 @@ function ReaderScreen({ paper, onBack, onSubscribe, subscribed }) {
   );
 }
 
-function SubscribeScreen({ onSubscribed, subscribed }) {
+function SubscribeScreen({ subscribed }) {
   const [selected, setSelected] = useState("yearly");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const startCheckout = async () => {
+    if (selected === "institution") {
+      setError("机构订阅暂不在线付款，请通过官方联系方式咨询定价。");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: selected }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.url) throw new Error(data.error || "暂时无法打开支付页面");
+      window.location.assign(data.url);
+    } catch (checkoutError) {
+      setError(checkoutError.message || "支付连接失败，请稍后再试");
+      setLoading(false);
+    }
+  };
   return (
     <div className="flex flex-col h-full" style={{ background: paper }}>
       <div className="px-5 pt-6 pb-4" style={{ borderBottom: `1px solid ${hairline}` }}>
@@ -377,11 +402,20 @@ function SubscribeScreen({ onSubscribed, subscribed }) {
       </div>
 
       <div className="px-5 pb-6 pt-3" style={{ borderTop: `1px solid ${hairline}` }}>
+        <div style={{ fontSize: 10, color: muted, lineHeight: 1.5, marginBottom: 10, textAlign: "center" }}>
+          自动续费 · 可随时取消 · 取消后权益保留至当前周期结束 · 付款后 7 天内可申请退款
+        </div>
+        {error && (
+          <div style={{ fontSize: 11, color: red, lineHeight: 1.5, marginBottom: 10, textAlign: "center" }}>
+            {error}
+          </div>
+        )}
         <button
-          onClick={onSubscribed}
+          onClick={startCheckout}
+          disabled={loading || subscribed}
           style={{
             width: "100%",
-            background: subscribed ? muted : ink,
+            background: subscribed || loading ? muted : ink,
             color: paper,
             fontSize: 14,
             fontWeight: 700,
@@ -389,7 +423,13 @@ function SubscribeScreen({ onSubscribed, subscribed }) {
             borderRadius: 999,
           }}
         >
-          {subscribed ? "已订阅" : "确认订阅"}
+          {subscribed
+            ? "已订阅"
+            : loading
+              ? "正在连接 Stripe…"
+              : selected === "institution"
+                ? "联系机构订阅"
+                : "前往 Stripe 安全支付"}
         </button>
       </div>
     </div>
@@ -493,6 +533,34 @@ export default function GewuApp() {
   const [openPaper, setOpenPaper] = useState(null);
   const [subscribed, setSubscribed] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const returnedSession = params.get("session_id");
+    const savedSession = window.localStorage.getItem("xart_stripe_session");
+    const sessionId = returnedSession || savedSession;
+
+    if (params.get("checkout") === "cancelled") {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    if (!sessionId) return;
+
+    fetch(`/api/verify-checkout-session?session_id=${encodeURIComponent(sessionId)}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.active) {
+          setSubscribed(true);
+          window.localStorage.setItem("xart_stripe_session", sessionId);
+        } else {
+          setSubscribed(false);
+          window.localStorage.removeItem("xart_stripe_session");
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (returnedSession) window.history.replaceState({}, "", window.location.pathname);
+      });
+  }, []);
+
   let screen;
   if (openPaper) {
     screen = (
@@ -510,7 +578,7 @@ export default function GewuApp() {
     screen = <DiscoverScreen onOpenPaper={setOpenPaper} />;
   } else if (tab === "subscribe") {
     screen = (
-      <SubscribeScreen subscribed={subscribed} onSubscribed={() => setSubscribed(true)} />
+      <SubscribeScreen subscribed={subscribed} />
     );
   } else {
     screen = <ProfileScreen subscribed={subscribed} />;
