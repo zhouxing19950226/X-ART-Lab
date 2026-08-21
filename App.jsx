@@ -135,7 +135,7 @@ function DiscoverScreen({ onOpenPaper }) {
         <div className="flex items-center justify-between">
           <div>
             <div style={{ fontSize: 26, fontWeight: 800, color: ink, letterSpacing: "-0.01em" }}>
-              格物
+              X-ART Lab.
             </div>
             <div style={{ fontSize: 10, fontWeight: 700, color: muted, letterSpacing: "0.18em", marginTop: 2 }}>
               GEWU · CONTEMPORARY ART RESEARCH
@@ -259,7 +259,7 @@ function ReaderScreen({ paper, onBack, onSubscribe, subscribed }) {
                 你尚未获得进入此文本其余部分的权利
               </div>
               <div style={{ fontSize: 12, color: muted, marginTop: 4, maxWidth: 260 }}>
-                订阅「格物」，解锁本篇及全部研究专题的完整正文
+                订阅「X-ART Lab.」，解锁本篇及全部研究专题的完整正文
               </div>
               <button
                 onClick={onSubscribe}
@@ -416,7 +416,7 @@ function ProfileScreen({ subscribed }) {
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: ink }}>会员状态</div>
               <div style={{ fontSize: 12, color: muted, marginTop: 2 }}>
-                {subscribed ? "格物年度会员 · 有效期至 2027-08" : "未订阅"}
+                {subscribed ? "X-ART Lab.年度会员 · 有效期至 2027-08" : "未订阅"}
               </div>
             </div>
             <span
