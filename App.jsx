@@ -1,4 +1,3 @@
-/opt/homebrew/Library/Homebrew/cmd/shellenv.sh: line 18: /bin/ps: Operation not permitted
 import React, { useEffect, useState } from "react";
 import { Compass, BookMarked, CreditCard, User, Lock, ChevronLeft, Search, Check } from "lucide-react";
 
