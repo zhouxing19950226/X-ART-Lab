@@ -1,3 +1,4 @@
+/opt/homebrew/Library/Homebrew/cmd/shellenv.sh: line 18: /bin/ps: Operation not permitted
 const columns=["n","tag","minutes","locked","published","language","cover_image","zh_title","zh_summary","zh_content","fr_title","fr_summary","fr_content","en_title","en_summary","en_content"];
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json;charset=UTF-8","cache-control":"no-store"}});
@@ -9,6 +10,16 @@ const stripEditorialNote=value=>{
   if(last.includes("x-art lab"))blocks.pop();
   return blocks.join("\n\n").trimEnd();
 };
+
+// Normalize editor and translated text before it is stored. Markdown blocks
+// must remain separated by empty lines so the reader and PDF renderer create
+// real paragraphs instead of one continuous wall of text.
+const normalizeContent=value=>String(value||"")
+  .replace(/\r\n?/g,"\n")
+  .replace(/([^\n])\s+(#{1,2}\s+)/g,"$1\n\n$2")
+  .replace(/\n[ \t]+\n/g,"\n\n")
+  .replace(/\n{3,}/g,"\n\n")
+  .trim();
 
 async function translatePlain(ai,text,source,target){
   if(!text.trim())return "";
@@ -50,7 +61,7 @@ async function translateArticle(ai,body){
   for(const target of ["zh","fr","en"].filter(code=>code!==source)){
     body[target+"_title"]=await translatePlain(ai,body[source+"_title"],source,target);
     body[target+"_summary"]=await translatePlain(ai,body[source+"_summary"],source,target);
-    body[target+"_content"]=await translateRich(ai,body[source+"_content"],source,target);
+    body[target+"_content"]=normalizeContent(await translateRich(ai,body[source+"_content"],source,target));
   }
   body.language="all";
 }
@@ -90,7 +101,10 @@ export async function onRequestPost({request,env}){
   const body=await request.json();
   body.language=body.language||"zh";
   body.cover_image=body.cover_image||"";
-  for(const code of ["zh","fr","en"])for(const field of ["title","summary","content"])body[code+"_"+field]=body[code+"_"+field]||"";
+  for(const code of ["zh","fr","en"])for(const field of ["title","summary","content"]){
+    body[code+"_"+field]=body[code+"_"+field]||"";
+    if(field==="content")body[code+"_"+field]=normalizeContent(body[code+"_"+field]);
+  }
   for(const code of ["zh","fr","en"])body[code+"_content"]=stripEditorialNote(body[code+"_content"]);
   if(!["zh","fr","en","all"].includes(body.language))return json({error:"不支持的文章语言"},400);
   for(const field of ["title","summary","content"])if(!body[body.language+"_"+field]&&body.language!=="all")return json({error:"缺少字段："+field},400);
