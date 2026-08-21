@@ -46,8 +46,8 @@ function Profile({lang,setLang,subscribed}){const t=ui[lang];return <div classNa
 function Tabs({tab,setTab,lang}){const t=ui[lang],tabs=[["discover",t.discover,Compass],["library",t.mine,User],["subscribe",t.subscribe,CreditCard]];return <nav className="flex items-center justify-around" style={{height:64,borderTop:`1px solid ${hairline}`,background:paper}}>{tabs.map(([id,label,Icon])=><button key={id} onClick={()=>setTab(id)} className="flex flex-col items-center gap-1"><Icon size={20} color={tab===id?red:muted}/><span style={{fontSize:10,color:tab===id?red:muted,fontWeight:tab===id?700:400}}>{label}</span></button>)}</nav>}
 
 const responsiveStyles=`
-.xart-stage{min-height:760px;background:#EFEDE5;padding:32px 0}
-.xart-device{width:380px;height:720px;border-radius:36px;border:8px solid #141311;box-shadow:0 20px 50px rgba(0,0,0,.18)}
+.xart-stage{min-height:100dvh;padding:0;background:#FAF9F4;align-items:stretch}
+.xart-device{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
 @media (min-width:700px){
   .xart-stage{min-height:100dvh;padding:0;background:#FAF9F4;align-items:stretch}
   .xart-device{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
