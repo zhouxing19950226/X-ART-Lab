@@ -17,9 +17,12 @@ async function translatePlain(ai,text,source,target){
 }
 
 async function translateRich(ai,text,source,target){
-  const parts=text.split(/(!\[[^\]]*\]\([^)]+\))/g);
+  const parts=text.split(/(\n+|!\[[^\]]*\]\([^)]+\))/g);
   const output=[];
-  for(const part of parts)output.push(/^!\[[^\]]*\]\([^)]+\)$/.test(part)?part:await translatePlain(ai,part,source,target));
+  for(const part of parts){
+    if(/^\n+$/.test(part)||/^!\[[^\]]*\]\([^)]+\)$/.test(part))output.push(part);
+    else output.push(await translatePlain(ai,part,source,target));
+  }
   return output.join("");
 }
 
