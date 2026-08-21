@@ -21,8 +21,8 @@ async function translateRich(ai,text,source,target){
   // request for every Markdown fragment and exceeded the Workers subrequest limit
   // on long articles. URLs are replaced temporarily so the translator cannot alter
   // them; headings, lists and paragraph breaks are kept in the batched text.
-  const urls=[];
-  const protectedText=text.replace(/https?:\/\/[^\s)]+/g,url=>`URLTOKEN${urls.push(url)-1}ENDTOKEN`);
+  const protectedParts=[];
+  const protectedText=text.replace(/https?:\/\/[^\s)]+|\[(?:\/?(?:font|size|color|bg)(?:=[^\]]+)?)\]/g,value=>`XARTTOKEN${protectedParts.push(value)-1}ENDTOKEN`);
   const blocks=protectedText.split(/(\n{2,})/);
   const batches=[];
   let batch="";
@@ -33,7 +33,7 @@ async function translateRich(ai,text,source,target){
   if(batch)batches.push(batch);
   const translated=[];
   for(const item of batches)translated.push(await translatePlain(ai,item,source,target));
-  return translated.join("").replace(/URLTOKEN\s*(\d+)\s*ENDTOKEN/gi,(_,index)=>urls[Number(index)]||"");
+  return translated.join("").replace(/XARTTOKEN\s*(\d+)\s*ENDTOKEN/gi,(_,index)=>protectedParts[Number(index)]||"");
 }
 
 async function translateArticle(ai,body){
