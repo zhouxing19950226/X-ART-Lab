@@ -1,4 +1,5 @@
-const columns=["n","tag","minutes","locked","published","zh_title","zh_summary","zh_content","fr_title","fr_summary","fr_content","en_title","en_summary","en_content"];
+/opt/homebrew/Library/Homebrew/cmd/shellenv.sh: line 18: /bin/ps: Operation not permitted
+const columns=["n","tag","minutes","locked","published","language","cover_image","zh_title","zh_summary","zh_content","fr_title","fr_summary","fr_content","en_title","en_summary","en_content"];
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json;charset=UTF-8","cache-control":"no-store"}});
 const authorized=(request,env)=>Boolean(env.ADMIN_TOKEN)&&request.headers.get("Authorization")===`Bearer ${env.ADMIN_TOKEN}`;
@@ -8,12 +9,17 @@ async function initialize(db){
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     n TEXT NOT NULL, tag TEXT NOT NULL, minutes INTEGER NOT NULL DEFAULT 10,
     locked INTEGER NOT NULL DEFAULT 0, published INTEGER NOT NULL DEFAULT 1,
+    language TEXT NOT NULL DEFAULT 'all', cover_image TEXT NOT NULL DEFAULT '',
     zh_title TEXT NOT NULL, zh_summary TEXT NOT NULL, zh_content TEXT NOT NULL,
     fr_title TEXT NOT NULL, fr_summary TEXT NOT NULL, fr_content TEXT NOT NULL,
     en_title TEXT NOT NULL, en_summary TEXT NOT NULL, en_content TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`).run();
+  for(const statement of [
+    "ALTER TABLE articles ADD COLUMN language TEXT NOT NULL DEFAULT 'all'",
+    "ALTER TABLE articles ADD COLUMN cover_image TEXT NOT NULL DEFAULT ''"
+  ])try{await db.prepare(statement).run()}catch{}
 }
 
 export async function onRequestGet({request,env}){
@@ -31,6 +37,11 @@ export async function onRequestPost({request,env}){
   if(!env.DB)return json({error:"数据库尚未绑定"},503);
   await initialize(env.DB);
   const body=await request.json();
+  body.language=body.language||"zh";
+  body.cover_image=body.cover_image||"";
+  for(const code of ["zh","fr","en"])for(const field of ["title","summary","content"])body[code+"_"+field]=body[code+"_"+field]||"";
+  if(!["zh","fr","en","all"].includes(body.language))return json({error:"不支持的文章语言"},400);
+  for(const field of ["title","summary","content"])if(!body[body.language+"_"+field]&&body.language!=="all")return json({error:"缺少字段："+field},400);
   for(const key of columns)if(body[key]===undefined||body[key]===null)return json({error:`缺少字段：${key}`},400);
   const values=columns.map(key=>["locked","published"].includes(key)?(body[key]?1:0):body[key]);
   if(body.id){
