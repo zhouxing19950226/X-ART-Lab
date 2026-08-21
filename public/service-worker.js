@@ -1,4 +1,4 @@
-const CACHE_NAME = "x-art-lab-v3";
+const CACHE_NAME = "x-art-lab-v4";
 const APP_SHELL = ["/", "/manifest.webmanifest?v=2", "/icons/icon-192.png?v=2", "/icons/icon-512.png?v=2"];
 
 self.addEventListener("install", (event) => {
