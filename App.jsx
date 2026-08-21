@@ -1,3 +1,4 @@
+/opt/homebrew/Library/Homebrew/cmd/shellenv.sh: line 18: /bin/ps: Operation not permitted
 import React, { useEffect, useRef, useState } from "react";
 import { Compass, BookMarked, CreditCard, User, Lock, ChevronLeft, Search, Check, Minus, Plus, Share2, Download, Sun, Moon, BookOpen, Pencil, X } from "lucide-react";
 import Admin from "./Admin.jsx";
@@ -108,8 +109,10 @@ async function downloadArticle(item,lang){
   newPage();
   context.fillStyle="#C81E1E";context.fillRect(left,82,84,8);
   context.font="700 20px Arial";context.fillStyle="#111111";context.fillText("X-ART LAB",left,132);context.font="18px Arial";context.fillStyle="#666666";context.fillText("CONTEMPORARY ART RESEARCH",left,163);
-  context.textAlign="right";context.font="700 66px Arial";context.fillStyle="#C81E1E";context.fillText(item.n||"01",width-right,150);context.textAlign="left";y=252;
-  drawText(articleTitle,{font:"700 58px Arial",lineHeight:70,spaceAfter:28,maxWidth:contentWidth*.83});
+  context.textAlign="right";context.font="bold 66px Arial";context.fillStyle="#C81E1E";context.fillText(item.n||"01",width-right,150);context.textAlign="left";y=252;
+  // Use an explicit bold face for the PDF title. Numeric font weights are not
+  // rendered consistently by every browser canvas/PDF combination.
+  drawText(articleTitle,{font:"bold 58px Arial",lineHeight:70,spaceAfter:28,maxWidth:contentWidth*.83});
   context.strokeStyle="#111111";context.lineWidth=3;context.beginPath();context.moveTo(left,y);context.lineTo(width-right,y);context.stroke();y+=34;
   context.font="19px Arial";context.fillStyle="#666666";context.fillText(`${item.tag}  /  ${item.minutes} MIN`,left,y);y+=58;
   await drawImage(item.cover_image);
