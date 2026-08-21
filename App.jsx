@@ -134,7 +134,30 @@ export default function App(){
   if(location.pathname.startsWith("/admin"))return <Admin/>;
   const[tab,setTab]=useState("discover"),[open,setOpen]=useState(null),[subscribed,setSubscribed]=useState(false),[items,setItems]=useState(fallbackItems),[lang,setLang]=useState(()=>localStorage.getItem("xart-language")||"zh");
   useEffect(()=>{localStorage.setItem("xart-language",lang);document.documentElement.lang=lang==="zh"?"zh-CN":lang},[lang]);
-  useEffect(()=>{fetch(`/api/articles?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(data.articles?.length)setItems(data.articles.map(p=>({id:p.id,n:p.n,tag:p.tag,minutes:p.minutes,locked:p.locked,language:p.language||"all",cover_image:p.cover_image||"",zh:[p.zh_title,p.zh_summary],fr:[p.fr_title,p.fr_summary],en:[p.en_title,p.en_summary],content:{zh:p.zh_content,fr:p.fr_content,en:p.en_content}})))}).catch(()=>{})},[]);
+  useEffect(()=>{
+    let active=true;
+    const syncArticles=()=>fetch(`/api/articles?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&data.articles?.length)setItems(data.articles.map(p=>({id:p.id,n:p.n,tag:p.tag,minutes:p.minutes,locked:p.locked,language:p.language||"all",cover_image:p.cover_image||"",zh:[p.zh_title,p.zh_summary],fr:[p.fr_title,p.fr_summary],en:[p.en_title,p.en_summary],content:{zh:p.zh_content,fr:p.fr_content,en:p.en_content}})))}).catch(()=>{});
+    const resume=()=>{if(document.visibilityState==="visible")syncArticles()};
+    syncArticles();
+    document.addEventListener("visibilitychange",resume);
+    window.addEventListener("focus",syncArticles);
+    window.addEventListener("pageshow",syncArticles);
+    window.addEventListener("online",syncArticles);
+    const timer=setInterval(()=>{if(document.visibilityState==="visible")syncArticles()},60000);
+    return()=>{active=false;clearInterval(timer);document.removeEventListener("visibilitychange",resume);window.removeEventListener("focus",syncArticles);window.removeEventListener("pageshow",syncArticles);window.removeEventListener("online",syncArticles)};
+  },[]);
+  useEffect(()=>{
+    let checking=false;
+    const checkVersion=async()=>{if(checking||document.visibilityState!=="visible")return;checking=true;try{const response=await fetch(`/?app-version=${Date.now()}`,{cache:"no-store",headers:{"cache-control":"no-cache"}});if(!response.ok)return;const html=await response.text(),parsed=new DOMParser().parseFromString(html,"text/html"),latest=parsed.querySelector('script[type="module"][src]')?.getAttribute("src"),current=document.querySelector('script[type="module"][src]')?.getAttribute("src");if(latest&&current&&latest!==current){const next=new URL(location.href);next.searchParams.set("app-update",Date.now());location.replace(next.href)}}catch{}finally{checking=false}};
+    const resume=()=>{if(document.visibilityState==="visible")checkVersion()};
+    document.addEventListener("visibilitychange",resume);
+    window.addEventListener("focus",checkVersion);
+    window.addEventListener("pageshow",checkVersion);
+    window.addEventListener("online",checkVersion);
+    const timer=setInterval(checkVersion,300000);
+    checkVersion();
+    return()=>{clearInterval(timer);document.removeEventListener("visibilitychange",resume);window.removeEventListener("focus",checkVersion);window.removeEventListener("pageshow",checkVersion);window.removeEventListener("online",checkVersion)};
+  },[]);
   useEffect(()=>{const params=new URLSearchParams(location.search),sessionId=params.get("session_id")||localStorage.getItem("xart-stripe-session");if(params.get("checkout")==="cancelled")history.replaceState({},"",location.pathname);if(!sessionId)return;fetch(`/api/verify-checkout-session?session_id=${encodeURIComponent(sessionId)}&t=${Date.now()}`,{cache:"no-store"}).then(r=>r.json()).then(data=>{if(data.active){setSubscribed(true);localStorage.setItem("xart-stripe-session",sessionId)}else localStorage.removeItem("xart-stripe-session");if(params.get("session_id"))history.replaceState({},"",location.pathname)}).catch(()=>{})},[]);
   let screen=open?<Reader item={open} lang={lang} setLang={setLang} back={()=>setOpen(null)} toSubscribe={()=>{setOpen(null);setTab("subscribe")}} subscribed={subscribed}/>:tab==="discover"?<Discover lang={lang} setLang={setLang} open={setOpen} items={items}/>:tab==="subscribe"?<Subscribe lang={lang} setLang={setLang} subscribed={subscribed} onSubscribed={()=>setSubscribed(true)}/>:<Profile lang={lang} setLang={setLang} subscribed={subscribed} items={items} onRead={setOpen}/>;
   return <><style>{responsiveStyles}</style><div className="xart-stage w-full flex items-center justify-center"><div className="xart-device" style={{overflow:"hidden",display:"flex",flexDirection:"column"}}><div style={{flex:1,overflow:"hidden"}}>{screen}</div>{!open&&<Tabs tab={tab} setTab={setTab} lang={lang}/>}</div></div></>
