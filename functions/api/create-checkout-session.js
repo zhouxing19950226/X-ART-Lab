@@ -10,7 +10,7 @@ export async function onRequestPost({request,env}){
   const plan=PLANS[payload.plan];if(!plan)return json({error:"请选择月度或年度方案"},400);
   const origin=new URL(request.url).origin;
   const form=new URLSearchParams({
-    mode:"subscription",locale:"auto",billing_address_collection:"required",
+    mode:"subscription",locale:"auto",billing_address_collection:"required","adaptive_pricing[enabled]":"false",
     "tax_id_collection[enabled]":"true","line_items[0][quantity]":"1",
     "line_items[0][price_data][currency]":"eur",
     "line_items[0][price_data][unit_amount]":String(plan.amount),
