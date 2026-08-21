@@ -17,18 +17,21 @@ async function translatePlain(ai,text,source,target){
 }
 
 async function translateRich(ai,text,source,target){
-  // Translate several paragraphs per AI request. The old implementation made one
-  // request for every Markdown fragment and exceeded the Workers subrequest limit
-  // on long articles. URLs are replaced temporarily so the translator cannot alter
-  // them; headings, lists and paragraph breaks are kept in the batched text.
+  // Keep every structural marker outside the translation model. This prevents
+  // Chinese translations from collapsing headings, paragraphs, quotes and lists.
   const protectedParts=[];
-  const protectedText=text.replace(/https?:\/\/[^\s)]+|\[(?:\/?(?:font|size|color|bg)(?:=[^\]]+)?)\]/g,value=>`XARTTOKEN${protectedParts.push(value)-1}ENDTOKEN`);
-  const blocks=protectedText.split(/(\n{2,})/);
+  const token=value=>`XARTTOKEN${protectedParts.push(value)-1}ENDTOKEN`;
+  const protect=unit=>{
+    if(/^\n+$/.test(unit))return token(unit);
+    let value=unit.replace(/^(#{1,2}\s+|>\s+|-\s+|\d+\.\s+)/,token);
+    return value.replace(/https?:\/\/[^\s)]+|\[(?:\/?(?:font|size|color|bg)(?:=[^\]]+)?)\]/g,token);
+  };
+  const units=text.split(/(\n+)/).filter(Boolean).map(protect);
   const batches=[];
   let batch="";
-  for(const block of blocks){
-    if(batch&&batch.length+block.length>1100){batches.push(batch);batch=""}
-    batch+=block;
+  for(const unit of units){
+    if(batch&&batch.length+unit.length>1100){batches.push(batch);batch=""}
+    batch+=unit;
   }
   if(batch)batches.push(batch);
   const translated=[];
