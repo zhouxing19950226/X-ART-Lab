@@ -3,6 +3,12 @@ const columns=["n","tag","minutes","locked","published","language","cover_image"
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json;charset=UTF-8","cache-control":"no-store"}});
 const authorized=(request,env)=>Boolean(env.ADMIN_TOKEN)&&request.headers.get("Authorization")===`Bearer ${env.ADMIN_TOKEN}`;
 const languageNames={zh:"chinese",fr:"french",en:"english"};
+const stripEditorialNote=value=>{
+  const blocks=String(value||"").trimEnd().split(/\n\s*\n/);
+  const last=(blocks.at(-1)||"").replace(/[\*_]/g,"").toLowerCase();
+  if(last.includes("x-art lab")&&/(原创|撰写|不复制|original|rédig|reprodu|written|copy)/i.test(last))blocks.pop();
+  return blocks.join("\n\n").trimEnd();
+};
 
 async function translatePlain(ai,text,source,target){
   if(!text.trim())return "";
@@ -74,7 +80,7 @@ export async function onRequestGet({request,env}){
   if(all&&!authorized(request,env))return json({error:"管理员登录已失效"},401);
   const query=all?"SELECT * FROM articles ORDER BY CAST(n AS INTEGER) DESC, id DESC":"SELECT * FROM articles WHERE published=1 ORDER BY CAST(n AS INTEGER) DESC, id DESC";
   const {results}=await env.DB.prepare(query).all();
-  return json({articles:results.map(x=>({...x,locked:Boolean(x.locked),published:Boolean(x.published)}))});
+  return json({articles:results.map(x=>{const article={...x,locked:Boolean(x.locked),published:Boolean(x.published)};for(const code of ["zh","fr","en"])article[code+"_content"]=stripEditorialNote(article[code+"_content"]);return article})});
 }
 
 export async function onRequestPost({request,env}){
@@ -85,6 +91,7 @@ export async function onRequestPost({request,env}){
   body.language=body.language||"zh";
   body.cover_image=body.cover_image||"";
   for(const code of ["zh","fr","en"])for(const field of ["title","summary","content"])body[code+"_"+field]=body[code+"_"+field]||"";
+  for(const code of ["zh","fr","en"])body[code+"_content"]=stripEditorialNote(body[code+"_content"]);
   if(!["zh","fr","en","all"].includes(body.language))return json({error:"不支持的文章语言"},400);
   for(const field of ["title","summary","content"])if(!body[body.language+"_"+field]&&body.language!=="all")return json({error:"缺少字段："+field},400);
   // Existing multilingual articles may be corrected one language at a time in
