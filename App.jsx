@@ -38,7 +38,31 @@ function Discover({lang,setLang,open,items}){
   </div>
 }
 
-function Reader({item,lang,setLang,back,toSubscribe,subscribed}){const t=ui[lang],locked=item.locked&&!subscribed,articleBody=item.content?.[lang]||t.body;return <div className="flex flex-col h-full" style={{background:paper}}><header className="flex items-center justify-between px-5" style={{minHeight:56,borderBottom:`1px solid ${hairline}`}}><button onClick={back} aria-label={t.back}><ChevronLeft size={20}/></button><b style={{fontSize:13,letterSpacing:".06em"}}>{t.article}</b><Lang lang={lang} setLang={setLang}/></header><main className="flex-1 overflow-y-auto px-5 pt-6 pb-8">{item.cover_image&&<img src={item.cover_image} alt="" style={{width:"100%",maxHeight:480,objectFit:"cover",borderRadius:8,marginBottom:20}}/>}<Eye>{item.n} / {item.tag}</Eye><h1 style={{fontSize:22,fontWeight:800,marginTop:8,lineHeight:1.35}}>{item[lang][0]}</h1><div style={{fontSize:12,color:muted,marginTop:6}}>{item.minutes} {t.read}</div><hr style={{border:0,height:1,background:hairline,margin:"20px 0"}}/><p style={{fontSize:15,lineHeight:1.9}}>{item[lang][1]} {t.intro}</p>{locked?<div className="relative"><RichText text={articleBody} blurred/><div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center px-4" style={{paddingTop:48,background:`linear-gradient(180deg,transparent,${paper} 55%)`}}><Lock size={18} color={red}/><b style={{fontSize:14,marginTop:10}}>{t.lockedTitle}</b><div style={{fontSize:12,color:muted,marginTop:4}}>{t.lockedText}</div><button onClick={toSubscribe} style={{marginTop:16,background:ink,color:paper,fontSize:12,fontWeight:700,padding:"12px 22px",borderRadius:999}}>{t.subscribeCta}</button></div></div>:<RichText text={articleBody}/>}</main></div>}
+function Reader({item,lang,setLang,back,toSubscribe,subscribed}){
+  const t=ui[lang],locked=item.locked&&!subscribed,articleBody=item.content?.[lang]||t.body;
+  return <article className="swiss-reader">
+    <header className="swiss-reader-header">
+      <button onClick={back} aria-label={t.back}><ChevronLeft size={20}/><span>{t.back}</span></button>
+      <div className="swiss-reader-brand"><b>X-ART LAB</b><small>CONTEMPORARY ART RESEARCH</small></div>
+      <Lang lang={lang} setLang={setLang}/>
+    </header>
+    <main className="swiss-reader-scroll">
+      <section className="swiss-reader-hero">
+        <div className="swiss-red-rule"/>
+        <div className="swiss-meta"><b>{item.n}</b><span>{item.tag}</span><span>{item.minutes} {t.read}</span></div>
+        <h1>{item[lang][0]}</h1>
+        <div className="swiss-byline"><b>XING ZHOU</b><span>ZHOU-XING.COM</span></div>
+      </section>
+      {item.cover_image&&<img className="swiss-cover" src={item.cover_image} alt=""/>}
+      <section className="swiss-reader-body">
+        <p className="swiss-summary">{item[lang][1]}</p>
+        <div className="swiss-body-rule"/>
+        {locked?<div className="relative"><RichText text={articleBody} blurred/><div className="swiss-lock"><Lock size={20} color={red}/><b>{t.lockedTitle}</b><span>{t.lockedText}</span><button onClick={toSubscribe}>{t.subscribeCta}</button></div></div>:<RichText text={articleBody}/>}
+        <footer className="swiss-article-footer"><b>X</b><span>XING ZHOU</span><span>ZHOU-XING.COM</span></footer>
+      </section>
+    </main>
+  </article>
+}
 
 function Subscribe({lang,setLang,subscribed}){
   const t=ui[lang],[selected,setSelected]=useState("yearly"),[busy,setBusy]=useState(false),[error,setError]=useState("");
@@ -85,12 +109,26 @@ function Tabs({tab,setTab,lang}){const t=ui[lang],tabs=[["discover",t.discover,C
 const responsiveStyles=`
 .xart-stage{min-height:100dvh;padding:0;background:#FAF9F4;align-items:stretch}
 .xart-device{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
+.swiss-reader{height:100%;display:flex;flex-direction:column;background:#fff;color:#111}
+.swiss-reader-header{min-height:72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 clamp(18px,4vw,52px);border-bottom:1px solid #111;background:#fff}
+.swiss-reader-header>button{display:flex;align-items:center;gap:5px;justify-self:start;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.swiss-reader-header>.flex{justify-self:end}.swiss-reader-brand{text-align:center;line-height:1.05}.swiss-reader-brand b{display:block;font-size:15px;letter-spacing:.04em}.swiss-reader-brand small{font-size:7px;letter-spacing:.18em;color:#777}
+.swiss-reader-scroll{flex:1;overflow-y:auto;background:#fff}
+.swiss-reader-hero{position:relative;padding:clamp(36px,7vw,88px) clamp(20px,7vw,92px) clamp(42px,8vw,96px);background-image:repeating-linear-gradient(90deg,transparent 0,transparent calc(16.666% - 1px),#eeeeeb calc(16.666% - 1px),#eeeeeb 16.666%)}
+.swiss-red-rule{width:72px;height:6px;background:#c81e1e;margin-bottom:34px}.swiss-meta{display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;border-top:2px solid #111;padding-top:12px;font-size:11px;letter-spacing:.12em}.swiss-meta b{font-size:34px;line-height:1;color:#c81e1e}.swiss-meta span:last-child{text-align:right}
+.swiss-reader-hero h1{max-width:980px;margin:clamp(34px,7vw,78px) 0 46px;font-size:clamp(38px,7vw,92px);font-weight:800;letter-spacing:-.055em;line-height:.98}
+.swiss-byline{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #111;padding-top:13px;font-size:10px;letter-spacing:.12em}.swiss-byline span{text-align:right}
+.swiss-cover{display:block;width:100%;max-height:72vh;object-fit:cover;border-radius:0}
+.swiss-reader-body{width:min(760px,calc(100% - 40px));margin:0 auto;padding:clamp(42px,8vw,92px) 0 70px}.swiss-summary{margin:0 0 42px;font-size:clamp(20px,2.4vw,30px);font-weight:500;line-height:1.45;letter-spacing:-.02em}.swiss-body-rule{width:72px;height:5px;background:#c81e1e;margin-bottom:42px}.swiss-reader-body>div>p{font-size:17px!important;line-height:1.9!important;margin:0 0 26px}.swiss-reader-body img{border-radius:0!important}
+.swiss-lock{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:flex-start;padding:100px 0 8px;background:linear-gradient(180deg,transparent,#fff 48%)}.swiss-lock b{margin-top:12px;font-size:18px}.swiss-lock span{margin-top:7px;color:#777;font-size:13px}.swiss-lock button{margin-top:18px;border:0;border-radius:0;background:#111;color:#fff;padding:13px 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.swiss-article-footer{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:12px;margin-top:70px;padding-top:16px;border-top:2px solid #111;font-size:10px;letter-spacing:.12em}.swiss-article-footer b{font-size:30px;line-height:1}.swiss-article-footer span:last-child{text-align:right}
 @media (min-width:700px){
   .xart-stage{min-height:100dvh;padding:0;background:#FAF9F4;align-items:stretch}
   .xart-device{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
   .xart-device header,.xart-device main,.xart-device footer{padding-left:max(32px,env(safe-area-inset-left));padding-right:max(32px,env(safe-area-inset-right))}
   .xart-device main{scrollbar-gutter:stable}
 }
+@media (max-width:699px){.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-reader-hero{background-image:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),#eeeeeb calc(25% - 1px),#eeeeeb 25%)}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 36px}.swiss-byline{grid-template-columns:1fr}.swiss-byline span{display:none}.swiss-reader-body{width:calc(100% - 40px)}}
 `;
 
 export default function App(){
