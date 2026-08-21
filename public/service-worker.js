@@ -1,4 +1,4 @@
-const CACHE_NAME = "x-art-lab-v2";
+const CACHE_NAME = "x-art-lab-v3";
 const APP_SHELL = ["/", "/manifest.webmanifest?v=2", "/icons/icon-192.png?v=2", "/icons/icon-512.png?v=2"];
 
 self.addEventListener("install", (event) => {
@@ -16,7 +16,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
+  const url = new URL(event.request.url);\n  if (event.request.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
 
   if (event.request.mode === "navigate") {
     event.respondWith(
