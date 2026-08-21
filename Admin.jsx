@@ -13,12 +13,12 @@ export default function Admin(){
   const[busy,setBusy]=useState(false);
 
   const api=async(path="",options={})=>{
-    const response=await fetch(`/api/articles${path}`,{...options,headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`,...options.headers}});
+    const response=await fetch(`/api/articles${path}`,{cache:"no-store",...options,headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`,...options.headers}});
     const data=await response.json().catch(()=>({}));
     if(!response.ok)throw new Error(data.error||"请求失败");
     return data;
   };
-  const load=async()=>{setBusy(true);try{const data=await api("?all=1");setArticles(data.articles);setMessage("")}catch(e){setMessage(e.message);if(e.message.includes("登录"))setToken("")}finally{setBusy(false)}};
+  const load=async()=>{setBusy(true);try{const data=await api(`?all=1&t=${Date.now()}`);setArticles(data.articles);setMessage("")}catch(e){setMessage(e.message);if(e.message.includes("登录"))setToken("")}finally{setBusy(false)}};
   useEffect(()=>{if(token){sessionStorage.setItem("xart-admin-token",token);load()}},[token]);
   const login=async e=>{e.preventDefault();setToken(inputToken.trim())};
   const save=async e=>{e.preventDefault();setBusy(true);try{await api("",{method:"POST",body:JSON.stringify(editing)});setEditing(null);setMessage("文章已发布");await load()}catch(err){setMessage(err.message)}finally{setBusy(false)}};
