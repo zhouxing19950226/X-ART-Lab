@@ -20,7 +20,7 @@ export async function onRequestPost({request,env}){
     success_url:`${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url:`${origin}/?checkout=cancelled`,
   });
-  const stripeResponse=await fetch("https://api.stripe.com/v1/checkout/sessions",{method:"POST",headers:{Authorization:`Bearer ${env.STRIPE_SECRET_KEY}`,"content-type":"application/x-www-form-urlencoded"},body:form});
+  const stripeResponse=await fetch("https://api.stripe.com/v1/checkout/sessions",{method:"POST",headers:{Authorization:`Bearer ${env.STRIPE_SECRET_KEY}`,"Stripe-Version":"2024-11-20.acacia","content-type":"application/x-www-form-urlencoded"},body:form});
   const session=await stripeResponse.json();
   if(!stripeResponse.ok)return json({error:session.error?.message||"Stripe 创建支付页面失败"},502);
   return json({url:session.url});
