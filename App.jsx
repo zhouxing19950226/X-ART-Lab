@@ -149,7 +149,7 @@ function Tabs({tab,setTab,lang}){const t=ui[lang],tabs=[["discover",t.discover,C
 
 const responsiveStyles=`
 @keyframes xartSplashExit{0%,68%{opacity:1}100%{opacity:0;visibility:hidden}}
-@keyframes xartSplashLogo{0%{opacity:0;transform:scale(.96)}22%,72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.015)}}
+@keyframes xartSplashLogo{0%,72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.015)}}
 .xart-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;width:100vw;height:100dvh;background:#000;animation:xartSplashExit 1.8s ease forwards;pointer-events:none}
 .xart-splash img{display:block;width:min(46vw,260px);max-height:22vh;object-fit:contain;filter:grayscale(1) brightness(0) invert(1);animation:xartSplashLogo 1.8s ease forwards}
 .xart-stage{min-height:100dvh;padding:0;background:#FAF9F4;align-items:stretch}
