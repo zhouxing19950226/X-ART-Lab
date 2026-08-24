@@ -11,6 +11,7 @@ async function initialize(db){
     likes INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`).run();
+  for(const statement of ["ALTER TABLE community_posts ADD COLUMN title TEXT NOT NULL DEFAULT ''","ALTER TABLE community_posts ADD COLUMN type TEXT NOT NULL DEFAULT 'Research question'","ALTER TABLE community_posts ADD COLUMN image TEXT NOT NULL DEFAULT ''"]){try{await db.prepare(statement).run()}catch{}}
 }
 
 export async function onRequestGet({env}){
@@ -31,9 +32,15 @@ export async function onRequestPost({request,env}){
     await env.DB.prepare("UPDATE community_posts SET likes=likes+1 WHERE id=?").bind(id).run();
     return json({ok:true});
   }
-  const author=clean(body.author).slice(0,40),content=clean(body.content).slice(0,1200),language=["zh","fr","en"].includes(body.language)?body.language:"zh",parentId=body.parentId?Number(body.parentId):null;
+  if(body.action==="translate"){
+    const post=await env.DB.prepare("SELECT title,content,language FROM community_posts WHERE id=?").bind(Number(body.id)).first();if(!post)return json({error:"Discussion not found"},404);
+    const target=["zh","fr","en"].includes(body.language)?body.language:"en";
+    if(target===post.language)return json({translation:post.content});
+    try{const result=await env.AI.run("@cf/zai-org/glm-4.7-flash",{messages:[{role:"system",content:`Translate into ${target}. Preserve meaning and tone. Return only the translation.`},{role:"user",content:`${post.title?post.title+"\n\n":""}${post.content}`}],max_tokens:900,temperature:.1}),translation=result?.response||result?.result?.response;return json({translation:translation||post.content})}catch{return json({translation:post.content})}
+  }
+  const author=clean(body.author).slice(0,40),title=clean(body.title).slice(0,100),content=clean(body.content).slice(0,1200),type=clean(body.type).slice(0,40),image=String(body.image||"").startsWith("data:image/")?String(body.image).slice(0,650000):"",language=["zh","fr","en"].includes(body.language)?body.language:"zh",parentId=body.parentId?Number(body.parentId):null;
   if(author.length<1||content.length<2)return json({error:"Name and message are required"},400);
   if(parentId){const parent=await env.DB.prepare("SELECT id FROM community_posts WHERE id=? AND parent_id IS NULL").bind(parentId).first();if(!parent)return json({error:"Discussion not found"},404)}
-  const result=await env.DB.prepare("INSERT INTO community_posts (parent_id,author,content,language) VALUES (?,?,?,?)").bind(parentId,author,content,language).run();
+  const result=await env.DB.prepare("INSERT INTO community_posts (parent_id,author,title,content,type,image,language) VALUES (?,?,?,?,?,?,?)").bind(parentId,author,title,content,type,image,language).run();
   return json({ok:true,id:result.meta.last_row_id},201);
 }
