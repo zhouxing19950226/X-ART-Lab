@@ -501,20 +501,14 @@ export default function Admin() {
       return next;
     });
   const open = (a) => {
-    let value = a ? { ...blank, ...a, language: detect(a) } : { ...blank };
-    if (!a)
-      try {
-        const draft = JSON.parse(
-          localStorage.getItem("xart-admin-draft") || "null",
-        );
-        if (draft) value = { ...blank, ...draft, id: null };
-      } catch {}
+    const value = a ? { ...blank, ...a, language: detect(a) } : { ...blank };
+    if (!a) localStorage.removeItem("xart-admin-draft");
     setEdit(value);
     setPreviewLang(value.language || "zh");
     setMsg("");
   };
   useEffect(() => {
-    if (!edit) return;
+    if (!edit || edit.id) return;
     const timer = setTimeout(
       () =>
         localStorage.setItem(
