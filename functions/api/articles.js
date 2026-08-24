@@ -107,13 +107,13 @@ export async function onRequestPost({request,env}){
   for(const code of ["zh","fr","en"])body[code+"_content"]=stripEditorialNote(body[code+"_content"]);
   if(!["zh","fr","en","all"].includes(body.language))return json({error:"不支持的文章语言"},400);
   for(const field of ["title","summary","content"])if(!body[body.language+"_"+field]&&body.language!=="all")return json({error:"缺少字段："+field},400);
-  // Existing multilingual articles may be corrected one language at a time in
-  // the editor. Keep those manual corrections and do not translate over them.
-  if(body.id){
-    body.language="all";
-  }else if(body.language!=="all"){
+  // New articles and explicit retranslation edits use the selected source
+  // language to refresh all three stored language versions.
+  if(body.language!=="all"&&(!body.id||body.retranslate)){
     if(!env.AI)return json({error:"自动翻译服务尚未绑定"},503);
     try{await translateArticle(env.AI,body)}catch(error){return json({error:"自动翻译失败，请稍后重试",detail:error.message},502)}
+  }else if(body.id){
+    body.language="all";
   }
   for(const key of columns)if(body[key]===undefined||body[key]===null)return json({error:`缺少字段：${key}`},400);
   const values=columns.map(key=>["locked","published"].includes(key)?(body[key]?1:0):body[key]);
