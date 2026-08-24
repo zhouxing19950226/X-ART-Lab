@@ -11,13 +11,13 @@ async function initialize(db){
     likes INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`).run();
-  for(const statement of ["ALTER TABLE community_posts ADD COLUMN title TEXT NOT NULL DEFAULT ''","ALTER TABLE community_posts ADD COLUMN type TEXT NOT NULL DEFAULT 'Research question'","ALTER TABLE community_posts ADD COLUMN image TEXT NOT NULL DEFAULT ''"]){try{await db.prepare(statement).run()}catch{}}
+  for(const statement of ["ALTER TABLE community_posts ADD COLUMN title TEXT NOT NULL DEFAULT ''","ALTER TABLE community_posts ADD COLUMN type TEXT NOT NULL DEFAULT 'Research question'","ALTER TABLE community_posts ADD COLUMN image TEXT NOT NULL DEFAULT ''","ALTER TABLE community_posts ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0","ALTER TABLE community_posts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0","ALTER TABLE community_posts ADD COLUMN recommended INTEGER NOT NULL DEFAULT 0","ALTER TABLE community_posts ADD COLUMN reported INTEGER NOT NULL DEFAULT 0"]){try{await db.prepare(statement).run()}catch{}}
 }
 
 export async function onRequestGet({env}){
   if(!env.DB)return json({error:"Community database is not configured"},503);
   await initialize(env.DB);
-  const {results}=await env.DB.prepare("SELECT * FROM community_posts ORDER BY created_at DESC, id DESC LIMIT 200").all();
+  const {results}=await env.DB.prepare("SELECT * FROM community_posts WHERE hidden=0 ORDER BY pinned DESC,recommended DESC,created_at DESC,id DESC LIMIT 200").all();
   const replies=new Map(),posts=[];
   for(const post of results){if(post.parent_id){if(!replies.has(post.parent_id))replies.set(post.parent_id,[]);replies.get(post.parent_id).push(post)}else posts.push(post)}
   return json({posts:posts.slice(0,60).map(post=>({...post,replies:(replies.get(post.id)||[]).reverse()}))});
