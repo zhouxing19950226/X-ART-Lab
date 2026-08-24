@@ -79,16 +79,23 @@ async function initialize(db){
   )`).run();
   for(const statement of [
     "ALTER TABLE articles ADD COLUMN language TEXT NOT NULL DEFAULT 'all'",
-    "ALTER TABLE articles ADD COLUMN cover_image TEXT NOT NULL DEFAULT ''"
+    "ALTER TABLE articles ADD COLUMN cover_image TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN pdf_name TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN pdf_data TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN pdf_size INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE articles ADD COLUMN audio_generated INTEGER NOT NULL DEFAULT 0"
   ])try{await db.prepare(statement).run()}catch{}
 }
 
 export async function onRequestGet({request,env}){
   if(!env.DB)return json({error:"数据库尚未绑定"},503);
   await initialize(env.DB);
-  const all=new URL(request.url).searchParams.get("all")==="1";
+  const url=new URL(request.url),fileId=Number(url.searchParams.get("file"));
+  if(fileId){const row=await env.DB.prepare("SELECT pdf_name,pdf_data,published FROM articles WHERE id=?").bind(fileId).first();if(!row||!row.pdf_data||(!row.published&&!authorized(request,env)))return json({error:"PDF not found"},404);const bytes=Uint8Array.from(atob(row.pdf_data),character=>character.charCodeAt(0));return new Response(bytes,{headers:{"content-type":"application/pdf","content-disposition":`attachment; filename*=UTF-8''${encodeURIComponent(row.pdf_name||"article.pdf")}`,"cache-control":"private,max-age=300"}})}
+  const all=url.searchParams.get("all")==="1";
   if(all&&!authorized(request,env))return json({error:"管理员登录已失效"},401);
-  const query=all?"SELECT * FROM articles ORDER BY CAST(n AS INTEGER) DESC, id DESC":"SELECT * FROM articles WHERE published=1 ORDER BY CAST(n AS INTEGER) DESC, id DESC";
+  const fields="id,n,tag,minutes,locked,published,language,cover_image,zh_title,zh_summary,zh_content,fr_title,fr_summary,fr_content,en_title,en_summary,en_content,created_at,updated_at,pdf_name,pdf_size,audio_generated,CASE WHEN pdf_data<>'' THEN 1 ELSE 0 END has_pdf";
+  const query=all?`SELECT ${fields} FROM articles ORDER BY CAST(n AS INTEGER) DESC,id DESC`:`SELECT ${fields} FROM articles WHERE published=1 ORDER BY CAST(n AS INTEGER) DESC,id DESC`;
   const {results}=await env.DB.prepare(query).all();
   let communityPosts=0;if(all)try{communityPosts=Number((await env.DB.prepare("SELECT COUNT(*) count FROM community_posts WHERE parent_id IS NULL").first())?.count||0)}catch{}
   return json({articles:results.map(x=>{const article={...x,locked:Boolean(x.locked),published:Boolean(x.published)};for(const code of ["zh","fr","en"])article[code+"_content"]=stripEditorialNote(article[code+"_content"]);return article}),meta:all?{communityPosts,services:{ai:Boolean(env.AI),pdf:true,audio:Boolean(env.AI)}}:undefined});
@@ -99,6 +106,14 @@ export async function onRequestPost({request,env}){
   if(!env.DB)return json({error:"数据库尚未绑定"},503);
   await initialize(env.DB);
   const body=await request.json();
+  if(body.action==="upload_pdf"){
+    const name=String(body.name||"document.pdf").replace(/[<>]/g,"").slice(0,160),data=String(body.data||"").replace(/^data:application\/pdf;base64,/,""),size=Number(body.size)||0;
+    if(!data||size<1)return json({error:"请选择 PDF 文件"},400);if(size>3*1024*1024)return json({error:"PDF 不能超过 3MB"},413);
+    const title=name.replace(/\.pdf$/i,"")||"PDF Document",n=String(Date.now()).slice(-8),summary="PDF research document",content=`# ${title}\n\nPDF document · ${(size/1024/1024).toFixed(2)} MB`;
+    const values=[n,"PDF",1,0,1,"all","",title,summary,content,title,summary,content,title,summary,content,name,data,size,0],marks=new Array(values.length).fill("?").join(",");
+    const result=await env.DB.prepare(`INSERT INTO articles (n,tag,minutes,locked,published,language,cover_image,zh_title,zh_summary,zh_content,fr_title,fr_summary,fr_content,en_title,en_summary,en_content,pdf_name,pdf_data,pdf_size,audio_generated) VALUES (${marks})`).bind(...values).run();
+    return json({ok:true,id:result.meta.last_row_id},201);
+  }
   body.language=body.language||"zh";
   body.cover_image=body.cover_image||"";
   for(const code of ["zh","fr","en"])for(const field of ["title","summary","content"]){
