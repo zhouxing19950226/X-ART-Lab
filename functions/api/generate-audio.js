@@ -2,6 +2,7 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:
 const languageNames={zh:"zh",fr:"fr",en:"en"};
 
 async function audioBytes(result){
+  if(result instanceof Response)return new Uint8Array(await result.arrayBuffer());
   if(result instanceof ReadableStream)return new Uint8Array(await new Response(result).arrayBuffer());
   if(result instanceof ArrayBuffer)return new Uint8Array(result);
   if(ArrayBuffer.isView(result))return new Uint8Array(result.buffer,result.byteOffset,result.byteLength);
@@ -17,7 +18,7 @@ export async function onRequestPost({request,env}){
   if(!text)return json({error:"Missing text"},400);
   const chunks=text.match(/[^。！？.!?]{1,900}[。！？.!?]?/g)||[text],parts=[];
   try{
-    for(const chunk of chunks)parts.push(await audioBytes(await env.AI.run("@cf/myshell-ai/melotts",{prompt:chunk,lang:language})));
+    for(const chunk of chunks)parts.push(await audioBytes(await env.AI.run("@cf/myshell-ai/melotts",{prompt:chunk,lang:language},{returnRawResponse:true})));
     const audio=await new Blob(parts,{type:"audio/mpeg"}).arrayBuffer();
     return new Response(audio,{headers:{"content-type":"audio/mpeg","content-disposition":"attachment; filename=article.mp3","cache-control":"no-store"}});
   }catch(error){return json({error:"Audio generation failed",detail:error.message},502)}
