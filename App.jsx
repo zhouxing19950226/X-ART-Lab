@@ -148,10 +148,19 @@ function Profile({lang,setLang,subscribed,items,onRead}){const t=ui[lang],readLa
 function Tabs({tab,setTab,lang}){const t=ui[lang],tabs=[["discover",t.discover,Compass],["library",t.mine,User],["subscribe",t.subscribe,CreditCard]];return <nav className="flex items-center justify-around" style={{height:64,borderTop:`1px solid ${hairline}`,background:paper}}>{tabs.map(([id,label,Icon])=><button key={id} onClick={()=>setTab(id)} className="flex flex-col items-center gap-1"><Icon size={20} color={tab===id?red:muted}/><span style={{fontSize:10,color:tab===id?red:muted,fontWeight:tab===id?700:400}}>{label}</span></button>)}</nav>}
 
 const responsiveStyles=`
-@keyframes xartSplashExit{0%,68%{opacity:1}100%{opacity:0;visibility:hidden}}
-@keyframes xartSplashLogo{0%,72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.015)}}
-.xart-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;width:100vw;height:100dvh;background:#000;animation:xartSplashExit 1.8s ease forwards;pointer-events:none}
-.xart-splash img{display:block;width:min(46vw,260px);max-height:22vh;object-fit:contain;filter:grayscale(1) brightness(0) invert(1);animation:xartSplashLogo 1.8s ease forwards}
+@keyframes xartSplashExit{0%,82%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
+@keyframes xartSplashLogo{0%{opacity:0;transform:scale(.76);filter:blur(10px)}22%{opacity:1;filter:blur(0)}66%{transform:scale(1.045);filter:drop-shadow(0 0 24px rgba(255,255,255,.22))}82%{opacity:1;transform:scale(1);filter:none}100%{opacity:0;transform:scale(1.025)}}
+@keyframes xartSplashLeft{0%,15%{opacity:0;transform:translateX(-72px)}58%{opacity:1;transform:translateX(19px)}74%,100%{opacity:1;transform:translateX(12px)}}
+@keyframes xartSplashRight{0%,15%{opacity:0;transform:translateX(72px)}58%{opacity:1;transform:translateX(-19px)}74%,100%{opacity:1;transform:translateX(-12px)}}
+@keyframes xartSplashRing{0%,46%{opacity:0;transform:scale(.58) rotate(-35deg)}66%{opacity:.32}82%{opacity:.12;transform:scale(1) rotate(0)}100%{opacity:0;transform:scale(1.08) rotate(12deg)}}
+@keyframes xartSplashPulse{0%,54%{opacity:0;transform:scale(.58)}65%{opacity:.72}88%,100%{opacity:0;transform:scale(1.48)}}
+@keyframes xartSplashCaption{0%,68%{opacity:0;transform:translateY(5px)}82%{opacity:.36;transform:translateY(0)}100%{opacity:0}}
+.xart-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;width:100vw;height:100dvh;border:0;padding:0;background:#050505;color:#fff;overflow:hidden;animation:xartSplashExit 2.4s ease forwards;pointer-events:none}
+.xart-splash-logo{display:block;width:min(62vw,430px);aspect-ratio:1;overflow:visible;animation:xartSplashLogo 2.4s cubic-bezier(.16,1,.3,1) both}
+.xart-splash-mark{fill:none;stroke:currentColor;stroke-width:24;stroke-linecap:butt;stroke-linejoin:round;vector-effect:non-scaling-stroke;transform-box:fill-box;transform-origin:center}
+.xart-splash-left{animation:xartSplashLeft 2.4s cubic-bezier(.16,1,.3,1) both}.xart-splash-right{animation:xartSplashRight 2.4s cubic-bezier(.16,1,.3,1) both}
+.xart-splash-ring,.xart-splash-pulse{fill:none;stroke:#fff;transform-box:fill-box;transform-origin:center;vector-effect:non-scaling-stroke}.xart-splash-ring{stroke-width:1;stroke-dasharray:3 12;animation:xartSplashRing 2.4s cubic-bezier(.16,1,.3,1) both}.xart-splash-pulse{stroke-width:2;animation:xartSplashPulse 2.4s ease-out both}
+.xart-splash-caption{position:absolute;bottom:clamp(28px,5vh,52px);font-size:9px;font-weight:700;letter-spacing:.28em;animation:xartSplashCaption 2.4s ease both}
 .xart-stage{min-height:100dvh;padding:0;background:#FAF9F4;align-items:stretch}
 .xart-device{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
 .swiss-reader{--reader-bg:#fff;--reader-fg:#111;--reader-muted:#777;--reader-line:#ddd;--reader-accent:#c81e1e;height:100%;display:flex;flex-direction:column;background:var(--reader-bg);color:var(--reader-fg)}.swiss-theme-night{--reader-bg:#11110f;--reader-fg:#efede6;--reader-muted:#aaa79f;--reader-line:#3b3934;--reader-accent:#ef5b52}.swiss-theme-eink{--reader-bg:#dedfd8;--reader-fg:#111;--reader-muted:#4c4d48;--reader-line:#8d8e87;--reader-accent:#111}
@@ -174,13 +183,14 @@ const responsiveStyles=`
   .xart-device header,.xart-device main,.xart-device footer{padding-left:max(32px,env(safe-area-inset-left));padding-right:max(32px,env(safe-area-inset-right))}
   .xart-device main{scrollbar-gutter:stable}
 }
-@media (max-width:699px){.xart-splash{padding-bottom:10vh}.xart-splash img{width:min(36vw,150px)}.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-reader-toolbar{justify-content:flex-start;gap:8px;padding:7px 14px;overflow-x:auto}.swiss-tool-group{gap:3px;flex:0 0 auto}.swiss-tool-group button{padding:0 7px}.swiss-tool-actions{margin-left:0}.swiss-tool-actions button span{display:none}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 0}.swiss-reader-body{width:calc(100% - 40px)}.swiss-article-footer{gap:12px}.swiss-footer-copy{gap:1px}}
+@media (max-width:699px){.xart-splash-logo{width:min(76vw,360px)}.swiss-reader-header{grid-template-columns:1fr auto}.swiss-reader-brand{display:none}.swiss-reader-header>button span{display:none}.swiss-reader-toolbar{justify-content:flex-start;gap:8px;padding:7px 14px;overflow-x:auto}.swiss-tool-group{gap:3px;flex:0 0 auto}.swiss-tool-group button{padding:0 7px}.swiss-tool-actions{margin-left:0}.swiss-tool-actions button span{display:none}.swiss-meta{grid-template-columns:58px 1fr}.swiss-meta span:last-child{grid-column:2;text-align:left;margin-top:8px}.swiss-reader-hero h1{margin:38px 0 0}.swiss-reader-body{width:calc(100% - 40px)}.swiss-article-footer{gap:12px}.swiss-footer-copy{gap:1px}}
+@media (prefers-reduced-motion:reduce){.xart-splash{display:none}}
 `;
 
 export default function App(){
   if(location.pathname.startsWith("/admin"))return <Admin/>;
   const[tab,setTab]=useState("discover"),[open,setOpen]=useState(null),[subscribed,setSubscribed]=useState(false),[items,setItems]=useState(fallbackItems),[lang,setLang]=useState(()=>localStorage.getItem("xart-language")||"zh"),[showSplash,setShowSplash]=useState(true);
-  useEffect(()=>{const timer=setTimeout(()=>setShowSplash(false),1800);return()=>clearTimeout(timer)},[]);
+  useEffect(()=>{const timer=setTimeout(()=>setShowSplash(false),2400);return()=>clearTimeout(timer)},[]);
   useEffect(()=>{localStorage.setItem("xart-language",lang);document.documentElement.lang=lang==="zh"?"zh-CN":lang},[lang]);
   useEffect(()=>{
     let active=true;
@@ -208,5 +218,5 @@ export default function App(){
   },[]);
   useEffect(()=>{const params=new URLSearchParams(location.search),sessionId=params.get("session_id")||localStorage.getItem("xart-stripe-session");if(params.get("checkout")==="cancelled")history.replaceState({},"",location.pathname);if(!sessionId)return;fetch(`/api/verify-checkout-session?session_id=${encodeURIComponent(sessionId)}&t=${Date.now()}`,{cache:"no-store"}).then(r=>r.json()).then(data=>{if(data.active){setSubscribed(true);localStorage.setItem("xart-stripe-session",sessionId)}else localStorage.removeItem("xart-stripe-session");if(params.get("session_id"))history.replaceState({},"",location.pathname)}).catch(()=>{})},[]);
   let screen=open?<Reader item={open} lang={lang} setLang={setLang} back={()=>setOpen(null)} toSubscribe={()=>{setOpen(null);setTab("subscribe")}} subscribed={subscribed}/>:tab==="discover"?<Discover lang={lang} setLang={setLang} open={setOpen} items={items}/>:tab==="subscribe"?<Subscribe lang={lang} setLang={setLang} subscribed={subscribed} onSubscribed={()=>setSubscribed(true)}/>:<Profile lang={lang} setLang={setLang} subscribed={subscribed} items={items} onRead={setOpen}/>;
-  return <><style>{responsiveStyles}</style><div className="xart-stage w-full flex items-center justify-center"><div className="xart-device" style={{overflow:"hidden",display:"flex",flexDirection:"column"}}><div style={{flex:1,overflow:"hidden"}}>{screen}</div>{!open&&<Tabs tab={tab} setTab={setTab} lang={lang}/>}</div></div>{showSplash&&<div className="xart-splash" aria-label="X-ART Lab"><img src="/api/site-logo" alt="X-ART Lab"/></div>}</>
+  return <><style>{responsiveStyles}</style><div className="xart-stage w-full flex items-center justify-center"><div className="xart-device" style={{overflow:"hidden",display:"flex",flexDirection:"column"}}><div style={{flex:1,overflow:"hidden"}}>{screen}</div>{!open&&<Tabs tab={tab} setTab={setTab} lang={lang}/>}</div></div>{showSplash&&<div className="xart-splash" role="status" aria-label="X-ART Lab 正在启动"><svg className="xart-splash-logo" viewBox="0 0 500 500" role="img" aria-label="X-ART Lab"><circle className="xart-splash-ring" cx="250" cy="250" r="132"/><circle className="xart-splash-pulse" cx="250" cy="250" r="105"/><path className="xart-splash-mark xart-splash-left" d="M105 90 L202 210 C226 237 226 263 202 290 L105 410"/><path className="xart-splash-mark xart-splash-right" d="M395 90 L298 210 C274 237 274 263 298 290 L395 410"/></svg><span className="xart-splash-caption">X-ART LAB</span></div>}</>
 }
