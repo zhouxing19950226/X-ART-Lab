@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.xartlab.reader",
+      "sha256_cert_fingerprints": ["7F:96:5A:9B:71:F1:74:96:CE:FA:3D:BE:69:06:52:FC:FC:D3:F1:1B:30:FE:EE:2A:6A:28:64:2F:30:F0:FC:A5"]
+    }
+  }
+]
