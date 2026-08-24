@@ -250,15 +250,25 @@ const L = ({ lang, setLang, dark = false }) => (
     ))}
   </div>
 );
+const fontStacks = {
+  sans: "Arial,sans-serif",
+  helvetica: '"Helvetica Neue",Helvetica,Arial,sans-serif',
+  serif: "Georgia,serif",
+  times: '"Times New Roman",Times,serif',
+  song: '"Songti SC",STSong,SimSun,serif',
+  kai: '"Kaiti SC",STKaiti,KaiTi,serif',
+  hei: '"PingFang SC","Microsoft YaHei","Heiti SC",sans-serif',
+  mono: "ui-monospace,monospace",
+};
 const inlineHtml = (text) =>
   String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(
-      /\[font=(sans|serif|mono)\]([\s\S]*?)\[\/font\]/g,
+      /\[font=(sans|helvetica|serif|times|song|kai|hei|mono)\]([\s\S]*?)\[\/font\]/g,
       (_, font, value) =>
-        `<span style="font-family:${font === "serif" ? "Georgia,serif" : font === "mono" ? "ui-monospace,monospace" : "Arial,sans-serif"}">${value}</span>`,
+        `<span style="font-family:${fontStacks[font]}">${value}</span>`,
     )
     .replace(
       /\[size=(12|14|16|18|24|32)\]([\s\S]*?)\[\/size\]/g,
@@ -1625,7 +1635,12 @@ export default function Admin() {
                       字体
                     </option>
                     <option value="sans">无衬线</option>
+                    <option value="helvetica">Helvetica</option>
                     <option value="serif">衬线</option>
+                    <option value="times">Times New Roman</option>
+                    <option value="song">宋体 / Songti</option>
+                    <option value="kai">楷体 / Kaiti</option>
+                    <option value="hei">黑体 / Heiti</option>
                     <option value="mono">等宽</option>
                   </select>
                   <select
