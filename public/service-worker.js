@@ -1,5 +1,5 @@
 const CACHE_NAME = "x-art-lab-v8";
-const APP_SHELL = ["/", "/manifest.webmanifest?v=4", "/icons/icon-192.png?v=4", "/icons/icon-512.png?v=4"];
+const APP_SHELL = ["/", "/manifest.webmanifest?v=5", "/icons/icon-192.png?v=5", "/icons/icon-512.png?v=5"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
