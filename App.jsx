@@ -121,6 +121,7 @@ const cleanPdfInline=text=>String(text||"").replace(/\[(?:font|size|color|bg)=[^
 
 async function downloadArticle(item,lang){
   try{const history=JSON.parse(localStorage.getItem("xart-download-history")||"[]");history.unshift({id:item.id||item.n,title:item[lang]?.[0]||"Article",date:new Date().toISOString()});localStorage.setItem("xart-download-history",JSON.stringify(history.slice(0,30)))}catch{}
+  if(item.has_pdf){const link=document.createElement("a");link.href=`/api/articles?file=${item.id}`;link.download=item.pdf_name||`${item[lang]?.[0]||"article"}.pdf`;document.body.appendChild(link);link.click();link.remove();return}
   const {jsPDF}=await import("jspdf");
   const articleTitle=item[lang][0],summary=item[lang][1],body=item.content?.[lang]||"";
   const width=1240,height=1754,left=112,right=102,contentWidth=width-left-right,footerTop=1515,pages=[];
@@ -279,7 +280,7 @@ export default function App(){
   useEffect(()=>{localStorage.setItem("xart-language",lang);document.documentElement.lang=lang==="zh"?"zh-CN":lang},[lang]);
   useEffect(()=>{
     let active=true;
-    const syncArticles=()=>fetch(`/api/articles?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&data.articles?.length)setItems(data.articles.map(p=>({id:p.id,n:p.n,tag:p.tag,minutes:p.minutes,locked:p.locked,language:p.language||"all",cover_image:p.cover_image||"",zh:[p.zh_title,p.zh_summary],fr:[p.fr_title,p.fr_summary],en:[p.en_title,p.en_summary],content:{zh:p.zh_content,fr:p.fr_content,en:p.en_content}})))}).catch(()=>{});
+    const syncArticles=()=>fetch(`/api/articles?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&data.articles?.length)setItems(data.articles.map(p=>({id:p.id,n:p.n,tag:p.tag,minutes:p.minutes,locked:p.locked,language:p.language||"all",cover_image:p.cover_image||"",has_pdf:Boolean(p.has_pdf),pdf_name:p.pdf_name||"",pdf_size:Number(p.pdf_size)||0,audio_generated:Boolean(p.audio_generated),zh:[p.zh_title,p.zh_summary],fr:[p.fr_title,p.fr_summary],en:[p.en_title,p.en_summary],content:{zh:p.zh_content,fr:p.fr_content,en:p.en_content}})))}).catch(()=>{});
     const resume=()=>{if(document.visibilityState==="visible")syncArticles()};
     syncArticles();
     document.addEventListener("visibilitychange",resume);
