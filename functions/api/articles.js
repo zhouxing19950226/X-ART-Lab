@@ -90,7 +90,8 @@ export async function onRequestGet({request,env}){
   if(all&&!authorized(request,env))return json({error:"管理员登录已失效"},401);
   const query=all?"SELECT * FROM articles ORDER BY CAST(n AS INTEGER) DESC, id DESC":"SELECT * FROM articles WHERE published=1 ORDER BY CAST(n AS INTEGER) DESC, id DESC";
   const {results}=await env.DB.prepare(query).all();
-  return json({articles:results.map(x=>{const article={...x,locked:Boolean(x.locked),published:Boolean(x.published)};for(const code of ["zh","fr","en"])article[code+"_content"]=stripEditorialNote(article[code+"_content"]);return article})});
+  let communityPosts=0;if(all)try{communityPosts=Number((await env.DB.prepare("SELECT COUNT(*) count FROM community_posts WHERE parent_id IS NULL").first())?.count||0)}catch{}
+  return json({articles:results.map(x=>{const article={...x,locked:Boolean(x.locked),published:Boolean(x.published)};for(const code of ["zh","fr","en"])article[code+"_content"]=stripEditorialNote(article[code+"_content"]);return article}),meta:all?{communityPosts,services:{ai:Boolean(env.AI),pdf:true,audio:Boolean(env.AI)}}:undefined});
 }
 
 export async function onRequestPost({request,env}){
