@@ -7,14 +7,18 @@ const textOf=result=>String(result?.response||result?.result?.response||result?.
 
 async function translate(ai,text,source,target){
   if(!text.trim()||source===target)return text;
-  const blocks=text.split(/(\n\n+)/),translated=[];
-  for(let start=0;start<blocks.length;start+=12){
-    const slice=blocks.slice(start,start+12),tokens=[];
-    const protectedText=slice.map(part=>/^\n+$/.test(part)?`XARTBREAK${tokens.push(part)-1}END`:part).join("");
-    const result=await ai.run("@cf/meta/m2m100-1.2b",{text:protectedText,source_lang:names[source],target_lang:names[target]});
-    translated.push(String(result.translated_text||result.translation||"").replace(/XARTBREAK\s*(\d+)\s*END/gi,(_,i)=>tokens[Number(i)]||"\n\n"));
+  const paragraphs=text.split(/\n\n+/).filter(Boolean),chunks=[];
+  let chunk="";
+  for(const paragraph of paragraphs){
+    const next=chunk?`${chunk}\nXARTPARA\n${paragraph}`:paragraph;
+    if(next.length>4800&&chunk){chunks.push(chunk);chunk=paragraph}else chunk=next;
   }
-  return cleanMarkdown(translated.join(""));
+  if(chunk)chunks.push(chunk);
+  const translated=new Array(chunks.length);
+  let cursor=0;
+  const worker=async()=>{while(cursor<chunks.length){const index=cursor++,value=chunks[index];let answer="";for(let attempt=0;attempt<2&&!answer;attempt++){try{const result=await ai.run("@cf/meta/m2m100-1.2b",{text:value,source_lang:names[source],target_lang:names[target]});answer=String(result.translated_text||result.translation||"").trim()}catch(error){if(attempt)throw error}}if(!answer)throw Error(`Empty ${target} translation at part ${index+1}`);translated[index]=answer.replace(/XART\s*PARA/gi,"\n\n")}};
+  await Promise.all(Array.from({length:Math.min(2,chunks.length)},worker));
+  return cleanMarkdown(translated.join("\n\n"));
 }
 
 export async function onRequestPost({request,env}){
@@ -33,12 +37,10 @@ export async function onRequestPost({request,env}){
     const metaResult=await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast",{messages:[{role:"user",content:metaPrompt}],max_tokens:420,temperature:.05});
     let meta={};try{meta=JSON.parse(textOf(metaResult).replace(/^```json\s*|\s*```$/g,""))}catch{}
     const title=String(meta.title||firstHeading||fallback).replace(/^#+\s*/,"").slice(0,260),summary=String(meta.summary||content.replace(/[#>*_\[\]()]/g,"").slice(0,420)).trim();
-    const targets=["zh","fr","en"],output={source,fileName:file.name,fileSize:file.size};
-    await Promise.all(targets.map(async target=>{
-      output[target+"_title"]=await translate(env.AI,title,source,target);
-      output[target+"_summary"]=await translate(env.AI,summary,source,target);
-      output[target+"_content"]=await translate(env.AI,content,source,target);
-    }));
+    const targets=["zh","fr","en"],output={source,fileName:file.name,fileSize:file.size,translationErrors:{}};
+    for(const target of targets)if(target===source){output[target+"_title"]=title;output[target+"_summary"]=summary;output[target+"_content"]=content}
+    await Promise.all(targets.filter(target=>target!==source).map(async target=>{for(let attempt=0;attempt<2;attempt++)try{const[translatedTitle,translatedSummary,translatedContent]=await Promise.all([translate(env.AI,title,source,target),translate(env.AI,summary,source,target),translate(env.AI,content,source,target)]);if(!translatedTitle||translatedContent.length<Math.min(80,content.length/4))throw Error("Incomplete translation");output[target+"_title"]=translatedTitle;output[target+"_summary"]=translatedSummary;output[target+"_content"]=translatedContent;delete output.translationErrors[target];break}catch(error){output[target+"_title"]="";output[target+"_summary"]="";output[target+"_content"]="";output.translationErrors[target]=error.message;if(attempt===0)await new Promise(resolve=>setTimeout(resolve,350))}}));
+    if(Object.keys(output.translationErrors).length)return json({error:"有语言翻译未完成，系统已自动重试，请再次上传",detail:output.translationErrors},502);
     return json(output);
   }catch(error){return json({error:"PDF 提取或翻译失败",detail:error.message},502)}
 }
