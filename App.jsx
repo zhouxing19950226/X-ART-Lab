@@ -202,16 +202,16 @@ function Tabs({tab,setTab,lang}){const t=ui[lang],aiLabel=lang==="zh"?"资料分
 
 const responsiveStyles=`
 @keyframes xartSplashExit{0%,82%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
-@keyframes xartSplashLogo{0%{opacity:0;transform:scale(.88);filter:blur(7px) drop-shadow(0 0 0 rgba(255,255,255,0))}24%{opacity:1;filter:blur(0) drop-shadow(0 0 10px rgba(255,255,255,.18))}62%{transform:scale(1.025);filter:drop-shadow(0 0 22px rgba(255,255,255,.48)) drop-shadow(0 0 52px rgba(255,255,255,.16))}82%{opacity:1;transform:scale(1);filter:drop-shadow(0 0 15px rgba(255,255,255,.3))}100%{opacity:0;transform:scale(1.015);filter:drop-shadow(0 0 30px rgba(255,255,255,.1))}}
+@keyframes xartSplashLogo{0%{opacity:0;transform:scale(.88);filter:blur(7px) drop-shadow(0 0 0 rgba(75,145,255,0))}22%{opacity:1;filter:blur(0) drop-shadow(0 0 12px rgba(75,145,255,.24))}58%{transform:scale(1.025);filter:drop-shadow(0 0 25px rgba(75,145,255,.62)) drop-shadow(0 0 62px rgba(42,112,255,.28))}82%{opacity:1;transform:scale(1);filter:drop-shadow(0 0 20px rgba(75,145,255,.48)) drop-shadow(0 0 46px rgba(42,112,255,.2))}92%{opacity:1;filter:drop-shadow(0 0 16px rgba(75,145,255,.36))}100%{opacity:0;transform:scale(1.015);filter:drop-shadow(0 0 34px rgba(42,112,255,.16))}}
 @keyframes xartSplashLeft{0%,12%{opacity:0;stroke-dashoffset:700;transform:translateX(-54px)}55%{opacity:1;stroke-dashoffset:0;transform:translateX(17px)}74%,100%{opacity:1;stroke-dashoffset:0;transform:translateX(12px)}}
 @keyframes xartSplashRight{0%,12%{opacity:0;stroke-dashoffset:700;transform:translateX(54px)}55%{opacity:1;stroke-dashoffset:0;transform:translateX(-17px)}74%,100%{opacity:1;stroke-dashoffset:0;transform:translateX(-12px)}}
 @keyframes xartSplashCaption{0%,68%{opacity:0;transform:translateY(5px)}82%{opacity:.36;transform:translateY(0)}100%{opacity:0}}
-.xart-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;width:100vw;height:100dvh;border:0;padding:0;background:#050505;color:#fff;overflow:hidden;animation:xartSplashExit 2.4s ease forwards;pointer-events:none}
+.xart-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;width:100vw;height:100dvh;border:0;padding:0;background:#050505;color:#fff;overflow:hidden;animation:xartSplashExit 3.2s ease forwards;pointer-events:none}
 .xart-splash-lockup{display:flex;flex-direction:column;align-items:center;transform:translateY(-8vh)}
-.xart-splash-logo{display:block;width:min(38vw,260px);aspect-ratio:1;overflow:visible;animation:xartSplashLogo 2.4s cubic-bezier(.16,1,.3,1) both}
+.xart-splash-logo{display:block;width:min(38vw,260px);aspect-ratio:1;overflow:visible;animation:xartSplashLogo 3.2s cubic-bezier(.16,1,.3,1) both}
 .xart-splash-mark{fill:none;stroke:currentColor;stroke-width:9.5;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:700;vector-effect:non-scaling-stroke;transform-box:fill-box;transform-origin:center}
-.xart-splash-left{animation:xartSplashLeft 2.4s cubic-bezier(.16,1,.3,1) both}.xart-splash-right{animation:xartSplashRight 2.4s cubic-bezier(.16,1,.3,1) both}
-.xart-splash-caption{position:relative;margin-top:-18px;font-size:11px;font-weight:700;letter-spacing:.32em;animation:xartSplashCaption 2.4s ease both}
+.xart-splash-left{animation:xartSplashLeft 3.2s cubic-bezier(.16,1,.3,1) both}.xart-splash-right{animation:xartSplashRight 3.2s cubic-bezier(.16,1,.3,1) both}
+.xart-splash-caption{position:relative;margin-top:-18px;font-size:11px;font-weight:700;letter-spacing:.32em;animation:xartSplashCaption 3.2s ease both}
 .xart-stage{min-height:100dvh;padding:0;background:#fff;align-items:stretch}
 .xart-device{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
 .xart-home-logo{display:block;width:42px;height:42px;color:#141311;flex:0 0 auto}.xart-home-logo g,.xart-page-logo g{stroke-width:4.8}.xart-home-wordmark{font-size:19px;font-weight:800;color:#141311;line-height:1}.xart-home-submark{margin-top:5px;color:#8c897d;font-size:7px;font-weight:700;letter-spacing:.15em}
@@ -275,7 +275,7 @@ const responsiveStyles=`
 export default function App(){
   if(location.pathname.startsWith("/admin"))return <Admin/>;
   const[tab,setTab]=useState("discover"),[open,setOpen]=useState(null),[subscribed,setSubscribed]=useState(false),[items,setItems]=useState(fallbackItems),[lang,setLang]=useState(()=>localStorage.getItem("xart-language")||"zh"),[showSplash,setShowSplash]=useState(true);
-  useEffect(()=>{const timer=setTimeout(()=>setShowSplash(false),2400);return()=>clearTimeout(timer)},[]);
+  useEffect(()=>{const timer=setTimeout(()=>setShowSplash(false),3200);return()=>clearTimeout(timer)},[]);
   useEffect(()=>{localStorage.setItem("xart-language",lang);document.documentElement.lang=lang==="zh"?"zh-CN":lang},[lang]);
   useEffect(()=>{
     let active=true;
