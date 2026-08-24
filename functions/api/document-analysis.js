@@ -2,7 +2,6 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:
 const languageNames={zh:"Simplified Chinese",fr:"French",en:"English"};
 const deadline=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(Error(`${label} timed out`)),ms))]);
 const answerText=result=>String(result?.response||result?.result?.response||result?.choices?.[0]?.message?.content||result?.choices?.[0]?.text||"").trim();
-const base64=buffer=>{const bytes=new Uint8Array(buffer),parts=[];for(let start=0;start<bytes.length;start+=32768)parts.push(String.fromCharCode(...bytes.subarray(start,start+32768)));return btoa(parts.join(""))};
 
 export async function onRequestPost({request,env}){
   if(!env.AI)return json({error:"AI service is not configured"},503);
@@ -15,9 +14,12 @@ export async function onRequestPost({request,env}){
   try{
     const rules=`Respond only in ${language}. Base the analysis on the uploaded material. Separate direct observation, interpretation, and outside context. Never invent artists, works, quotations, citations, dates, or page numbers. If something is unclear, say so. Begin with a direct answer, use short headings, and end with Evidence from the material.`;
     if(file.type.startsWith("image/")){
-      const image=`data:${file.type};base64,${base64(await file.arrayBuffer())}`;
-      const prompt=`You are X-ART Lab's rigorous visual-art research assistant. ${rules}\n\nUSER QUESTION: ${question||"Analyze the image's composition, visual language, atmosphere, likely artistic context, and useful creative directions."}`;
-      const result=await deadline(env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct",{messages:[{role:"system",content:"Accuracy and careful visual observation are more important than confidence."},{role:"user",content:prompt}],image,max_tokens:700,temperature:.15}),18000,"Image analysis");
+      const image=Array.from(new Uint8Array(await file.arrayBuffer()));
+      const observationResult=await deadline(env.AI.run("@cf/llava-hf/llava-1.5-7b-hf",{image,prompt:"Describe only what is visibly present in this image with forensic accuracy. State the exact dominant colors, background color, shapes, line directions, symmetry, composition, spacing, visible text, and approximate positions. Do not identify a brand, infer meaning, or add anything not visible.",max_tokens:420}),13000,"Visual inspection");
+      const observation=String(observationResult?.description||observationResult?.response||observationResult?.result?.description||observationResult?.result?.response||"").trim();
+      if(!observation)throw Error("Empty visual inspection");
+      const prompt=`You are X-ART Lab's rigorous visual-art research assistant. ${rules}\n\nA dedicated vision model inspected the uploaded image. Treat its report as the only visual evidence; do not change its colors or invent objects.\n\nVISUAL EVIDENCE:\n${observation}\n\nUSER QUESTION: ${question||"Analyze the image's composition, visual language, atmosphere, and useful creative directions."}\n\nFirst answer the question directly. Then provide: Visible facts; Formal analysis; Carefully labelled interpretation; Limitations. Every statement in Visible facts must be supported by the visual evidence above.`;
+      const result=await deadline(env.AI.run("@cf/zai-org/glm-4.7-flash",{messages:[{role:"system",content:"Never contradict the supplied visual evidence. Accuracy is more important than eloquence."},{role:"user",content:prompt}],max_tokens:720,temperature:.08}),13000,"Visual reasoning");
       const answer=answerText(result);if(!answer)throw Error("Empty image analysis");
       return json({answer,fileName:file.name,mode:"vision"});
     }
