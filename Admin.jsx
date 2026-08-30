@@ -72,6 +72,7 @@ const C = {
     confirm: "确定删除",
     deleted: "文章已删除",
     saved: "文章已发布",
+    draftSaved: "草稿已保存",
     error: "请求失败",
     new: "新建文章",
     editTitle: "编辑文章",
@@ -81,7 +82,6 @@ const C = {
     category: "分类",
     readTime: "阅读时间",
     subscriber: "需要订阅",
-    publishNow: "立即发布",
     cover: "封面图片",
     coverHelp: "建议横向图片，上传后自动压缩。",
     chooseCover: "选择封面",
@@ -93,8 +93,9 @@ const C = {
     insertImage: "插入正文图片",
     preview: "图文预览",
     previewHelp: "这里显示文章发布后的文字与图片顺序。",
-    publish: "保存并发布",
-    saving: "正在发布…",
+    saveDraft: "保存草稿",
+    publish: "发布文章",
+    saving: "正在保存…",
     required: "请填写标题、摘要和正文。",
   },
   fr: {
@@ -122,6 +123,7 @@ const C = {
     confirm: "Supprimer",
     deleted: "Article supprimé",
     saved: "Article publié",
+    draftSaved: "Brouillon enregistré",
     error: "Échec de la requête",
     new: "Nouvel article",
     editTitle: "Modifier l’article",
@@ -131,7 +133,6 @@ const C = {
     category: "Catégorie",
     readTime: "Temps de lecture",
     subscriber: "Réservé aux abonnés",
-    publishNow: "Publier maintenant",
     cover: "Image de couverture",
     coverHelp: "Format horizontal conseillé. Compression automatique.",
     chooseCover: "Choisir une image",
@@ -144,8 +145,9 @@ const C = {
     insertImage: "Insérer des images",
     preview: "Aperçu texte et images",
     previewHelp: "Ordre du texte et des images après publication.",
-    publish: "Enregistrer et publier",
-    saving: "Publication…",
+    saveDraft: "Enregistrer le brouillon",
+    publish: "Publier l’article",
+    saving: "Enregistrement…",
     required: "Renseignez le titre, le résumé et le texte.",
   },
   en: {
@@ -172,6 +174,7 @@ const C = {
     confirm: "Delete",
     deleted: "Article deleted",
     saved: "Article published",
+    draftSaved: "Draft saved",
     error: "Request failed",
     new: "New article",
     editTitle: "Edit article",
@@ -181,7 +184,6 @@ const C = {
     category: "Category",
     readTime: "Reading time",
     subscriber: "Subscriber only",
-    publishNow: "Publish now",
     cover: "Cover image",
     coverHelp: "Landscape format recommended. Automatic compression.",
     chooseCover: "Choose image",
@@ -194,8 +196,9 @@ const C = {
     insertImage: "Insert article images",
     preview: "Text and image preview",
     previewHelp: "This shows the published order of text and images.",
-    publish: "Save and publish",
-    saving: "Publishing…",
+    saveDraft: "Save draft",
+    publish: "Publish article",
+    saving: "Saving…",
     required: "Complete the title, summary, and body.",
   },
 };
@@ -636,7 +639,7 @@ export default function Admin() {
     window.addEventListener("keydown", full);
     return () => window.removeEventListener("keydown", full);
   }, [edit]);
-  const save = async (e) => {
+  const save = async (e, published = true) => {
     e.preventDefault();
     const l = edit.language;
     if (
@@ -649,7 +652,9 @@ export default function Admin() {
     }
     setBusy(true);
     setMsg(
-      lang === "zh"
+      !published
+        ? t.saving
+        : lang === "zh"
         ? "正在自动翻译并发布三种语言…"
         : lang === "fr"
           ? "Traduction automatique en trois langues…"
@@ -658,11 +663,15 @@ export default function Admin() {
     try {
       await api("", {
         method: "POST",
-        body: JSON.stringify({ ...edit, retranslate: !edit.id }),
+        body: JSON.stringify({
+          ...edit,
+          published,
+          retranslate: !edit.id,
+        }),
       });
       localStorage.removeItem("xart-admin-draft");
       setEdit(null);
-      setMsg(t.saved);
+      setMsg(published ? t.saved : t.draftSaved);
       await load();
     } catch (e) {
       setMsg(e.message);
@@ -1440,7 +1449,7 @@ export default function Admin() {
       </section>
       {edit && (
         <div className="shade">
-          <form className="modal" onSubmit={save}>
+          <form className="modal" onSubmit={(e) => save(e, true)}>
             <div className="modalhead">
               <div>
                 <i>CONTENT EDITOR</i>
@@ -1562,14 +1571,6 @@ export default function Admin() {
                   onChange={(e) => set("locked", e.target.checked)}
                 />
                 {t.subscriber}
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={edit.published}
-                  onChange={(e) => set("published", e.target.checked)}
-                />
-                {t.publishNow}
               </label>
             </div>
             <section>
@@ -1789,6 +1790,13 @@ export default function Admin() {
             <footer>
               <button type="button" onClick={() => setEdit(null)}>
                 {t.close}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={(e) => save(e, false)}
+              >
+                {busy ? t.saving : t.saveDraft}
               </button>
               <button className="primary" disabled={busy}>
                 {busy ? t.saving : t.publish}
