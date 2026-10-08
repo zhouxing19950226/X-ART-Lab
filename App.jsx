@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Compass, BookMarked, Bookmark, CreditCard, User, Lock, ChevronLeft, Search, Check, Minus, Plus, Share2, Download, Sun, Moon, BookOpen, Pencil, X, Sparkles, Save, Volume2, Play, Pause, Square, FileAudio, Upload, FileText, Image as ImageIcon, MessageCircle, Heart, Send, Settings, Bell, Palette, ShieldCheck, Info, ChevronRight, LogOut } from "lucide-react";import Admin from "./Admin.jsx";
 const articleCoverSources={
-  18:"https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1699654492i/198530372.jpg",
-  17:"https://i1.rgstatic.net/publication/378122729_Text-to-Image_Synthesis_with_Generative_Models_Methods_Datasets_Performance_Metrics_Challenges_and_Future_Direction/links/65c774b579007454976c46eb/largepreview.png",
-  16:"https://artlogic-res.cloudinary.com/w_2000%2Ch_2000%2Cc_limit%2Cf_auto%2Cfl_lossy%2Cq_auto%3Abest/ws-estherschipper2/usr/images/publications/main_image/items/b7/b73e9d58e6e34afaa9b91b84c7241d9c/hs_duty-free_recto_highres.jpg",
-  15:"https://copiona.com/editorial/en-defensa-de-la-imagen-pobre/en-defensa-de-la-imagen-pobre_1140x806.png",
-  14:"https://www.afmuseet.no/content/uploads/2022/02/Artificial-Hells-scaled.jpg",
-  13:"https://yale-press-us.imgix.net/covers/9780300205718.jpg?auto=format&w=1500",
-  12:"https://old.redemmas.org/uploads/edition/cover/8647/opengraph_The-Work-of-Art-in-the-Age-of-Its-Technological-Reproducibility-and-Other-9780674024458.jpg",
-  10:"https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2008/09/atv-1_reentry/9543361-7-eng-GB/ATV-1_reentry_pillars.jpg",
-  9:"https://standardebooks.org/images/covers/andre-gide_the-counterfeiters_dorothy-bussy-95d0e5c9-cover%402x.jpg",
-  8:"https://dynamic.indigoimages.ca/v1/books/books/0262525089/1.jpg?maxHeight=810&quality=85&width=810",
-  7:"https://static09.mulino.it/sitomulino/9788815383174/bookCoverSizeBig/a24166acover38317.jpeg"
+  18:"/article-covers/ranciere-les-voyages.jpg",
+  17:"/article-covers/generative-ai.png",
+  16:"/article-covers/duty-free-art.jpg",
+  15:"/article-covers/poor-image.png",
+  14:"/article-covers/artificial-hells.jpg",
+  13:"/article-covers/what-art-is.jpg",
+  12:"/article-covers/benjamin-work-art.jpg",
+  10:"/article-covers/return-test.jpg",
+  9:"/article-covers/counterfeiters.jpg",
+  8:"/article-covers/groys-history-becomes-form.jpg",
+  7:"/article-covers/coccia-sensibile.jpg"
 };
 const recoveredArticle=(id,n,tag,minutes,locked,title,summary,language="all")=>({id,n:String(n).padStart(2,"0"),tag,minutes,locked:!!locked,published:true,language,cover_image:articleCoverSources[id]||"",has_pdf:false,audio_generated:false,zh:[title,summary],fr:[title,summary],en:[title,summary],content:{zh:summary,fr:summary,en:summary}});
 const fallbackItems=[
