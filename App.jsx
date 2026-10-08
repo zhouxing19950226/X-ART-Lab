@@ -14,14 +14,10 @@ const fallbackItems=[
  recoveredArticle(8,2,"Art contemporain",8,false,"成为当代人：艺术如何与时间同行","从鲍里斯·格罗伊斯的《时间的同志》出发，重新理解当代艺术与时间、等待和重复的关系。当代不仅是年代标签，也是一种与共时性、延宕、循环和历史记忆有关的时间经验。"),
  recoveredArticle(7,1,"PHILOSOPHIE",30,false,"感性生活，埃马努埃尔·科奇亚","感官生活是我们存在的基础：我们首先是通过身体、感知和感觉存在的。文章以感性经验为起点，讨论生命、身体、图像与世界形成之间的关系。" )
 ];
-const fallbackArchives=[
- {id:"archive-nairy",slug:"nairy-baghramian",language:"all",published:true,sort_order:1,cover_image:"",title:"Nairy Baghramian｜艺术家档案",summary:"中文优先的研究档案：作品、展览、评论、访谈与原始来源链接。",page_url:"https://nairy-baghramian-research-archive.zhangchengyu810857.chatgpt.site/"},
- {id:"archive-ho-tzu-nyen",slug:"ho-tzu-nyen",language:"all",published:true,sort_order:2,cover_image:"",title:"Ho Tzu Nyen｜艺术家档案",summary:"三语研究档案：作品时间线、展览、视频访谈、评论与分类研究来源。",page_url:"https://ho-tzu-nyen-artist-archive.zhangchengyu810857.chatgpt.site/"},
- {id:"archive-philippe-parreno",slug:"philippe-parreno",language:"all",published:true,sort_order:3,cover_image:"",title:"Philippe Parreno｜参考资料",summary:"按视频、访谈、图录、机构档案、评论与艺术理论整理的图文研究网页。",page_url:"https://philippe-parreno-references.zhangchengyu810857.chatgpt.site/"}
-];
 
 
-const ink="#141311", paper="#FFFFFF", red="#C81E1E", muted="#77746C", hairline="#E7E5DF";
+
+, paper="#FFFFFF", red="#C81E1E", muted="#77746C", hairline="#E7E5DF";
 const readLocal=(key,fallback="")=>{try{return localStorage.getItem(key)??fallback}catch{return fallback}};const writeLocal=(key,value)=>{try{localStorage.setItem(key,String(value))}catch{}};
 const getAuthClient=()=>{const config=window.XART_SUPABASE||{};return window.supabase&&config.url&&config.anonKey?window.supabase.createClient(config.url,config.anonKey):null};
 
