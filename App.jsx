@@ -17,7 +17,20 @@ const fallbackItems=[
 
 
 
-, paper="#FFFFFF", red="#C81E1E", muted="#77746C", hairline="#E7E5DF";
+const fallbackArchives=[
+  {id:"archive-nairy",slug:"nairy-baghramian",language:"all",published:true,sort_order:1,cover_image:"/archive-covers/nairy-baghramian.jpg",title:"Nairy Baghramian｜艺术家档案",summary:"中文优先的研究档案：作品、展览、评论、访谈与原始来源链接。",page_url:"https://nairy-baghramian-research-archive.zhangchengyu810857.chatgpt.site/"},
+  {id:"archive-ho-tzu-nyen",slug:"ho-tzu-nyen",language:"all",published:true,sort_order:2,cover_image:"/archive-covers/ho-tzu-nyen.jpg",title:"Ho Tzu Nyen｜艺术家档案",summary:"三语研究档案：作品时间线、展览、视频访谈、评论与分类研究来源。",page_url:"https://ho-tzu-nyen-artist-archive.zhangchengyu810857.chatgpt.site/"},
+  {id:"archive-philippe-parreno",slug:"philippe-parreno",language:"all",published:true,sort_order:3,cover_image:"/archive-covers/philippe-parreno.png",title:"Philippe Parreno｜参考资料",summary:"按视频、访谈、图录、机构档案、评论与艺术理论整理的图文研究网页。",page_url:"https://philippe-parreno-references.zhangchengyu810857.chatgpt.site/"},
+  {id:"archive-yu-ji",slug:"yu-ji",language:"all",published:true,sort_order:4,cover_image:"https://zhouxing1995.github.io/Yu_Ji_Research_Archive/assets/flesh_stone_2025.webp",title:"于吉｜Yu Ji｜艺术家档案",summary:"中文优先的研究档案：艺术家简介、材料与身体实践、倒序时间线、重要作品、展览、视频访谈、评论与参考来源。",summary_zh:"中文优先的研究档案：艺术家简介、材料与身体实践、倒序时间线、重要作品、展览、视频访谈、评论与参考来源。",summary_en:"A research archive on Yu Ji’s material and bodily practice, with a reverse chronology, key works, exhibitions, interviews, criticism and source links.",summary_fr:"Une archive de recherche sur la pratique matérielle et corporelle de Yu Ji : chronologie inversée, œuvres, expositions, entretiens, critiques et sources.",page_url:"https://zhouxing1995.github.io/Yu_Ji_Research_Archive/?lang=zh"}
+];
+const mergeArchives=remote=>{
+  const incoming=Array.isArray(remote)?remote:[];
+  const key=archive=>String(archive?.slug||archive?.page_url||archive?.title||"").toLowerCase();
+  const merged=new Map(incoming.map(archive=>[key(archive),archive]));
+  fallbackArchives.forEach(archive=>{if(!merged.has(key(archive)))merged.set(key(archive),archive)});
+  return [...merged.values()].sort((a,b)=>(Number(a?.sort_order)||999)-(Number(b?.sort_order)||999));
+};
+const ink="#141311", paper="#FFFFFF", red="#C81E1E", muted="#77746C", hairline="#E7E5DF";
 const readLocal=(key,fallback="")=>{try{return localStorage.getItem(key)??fallback}catch{return fallback}};const writeLocal=(key,value)=>{try{localStorage.setItem(key,String(value))}catch{}};
 const getAuthClient=()=>{const config=window.XART_SUPABASE||{};return window.supabase&&config.url&&config.anonKey?window.supabase.createClient(config.url,config.anonKey):null};
 
@@ -376,7 +389,7 @@ export default function App(){
   },[]);
   useEffect(()=>{
     let active=true;
-    const syncArchives=()=>fetch(`/api/archives?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&Array.isArray(data.archives))setArchives(data.archives)}).catch(()=>{});
+    const syncArchives=()=>fetch(`/api/archives?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&Array.isArray(data.archives))setArchives(mergeArchives(data.archives))}).catch(()=>{});
     syncArchives();
     window.addEventListener("focus",syncArchives);
     window.addEventListener("pageshow",syncArchives);
