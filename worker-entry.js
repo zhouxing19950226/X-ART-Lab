@@ -62,3 +62,4 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
+// Keep the direct worker entry as the Pages deployment source of truth.
