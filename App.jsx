@@ -25,7 +25,14 @@ const fallbackArchives=[
 ];
 const mergeArchives=remote=>{
   const incoming=Array.isArray(remote)?remote:[];
-  const key=archive=>String(archive?.slug||archive?.page_url||archive?.title||"").toLowerCase();
+  const key=archive=>{
+    const text=`${archive?.slug||""} ${archive?.page_url||""} ${archive?.title||""}`.toLowerCase();
+    if(/nairy[\s_-]*baghramian|娜丽|娜伊里/.test(text))return "nairy-baghramian";
+    if(/ho[\s_-]*tzu[\s_-]*nyen|何子彦/.test(text))return "ho-tzu-nyen";
+    if(/philippe[\s_-]*parreno|parreno/.test(text))return "philippe-parreno";
+    if(/yu[\s_-]*ji|于吉/.test(text))return "yu-ji";
+    return text.trim()||String(archive?.id||"").toLowerCase();
+  };
   const merged=new Map(incoming.map(archive=>[key(archive),archive]));
   fallbackArchives.forEach(archive=>{if(!merged.has(key(archive)))merged.set(key(archive),archive)});
   return [...merged.values()].sort((a,b)=>(Number(a?.sort_order)||999)-(Number(b?.sort_order)||999));
