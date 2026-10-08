@@ -15,7 +15,10 @@ import { onRequestGet as getSystemStatus } from "./functions/api/system-status.j
 import { onRequestGet as getUsers } from "./functions/api/users.js";
 import { onRequestGet as getCheckout } from "./functions/api/verify-checkout-session.js";
 
+const workerProbe = () => new Response(JSON.stringify({ ok: true, worker: "pages" }), { headers: { "content-type": "application/json" } });
+
 const routes = new Map([
+  ["GET /api/__worker_probe", workerProbe],
   ["GET /api/archives", getArchives],
   ["POST /api/archives", postArchives],
   ["DELETE /api/archives", deleteArchives],
