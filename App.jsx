@@ -1,6 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Compass, BookMarked, Bookmark, CreditCard, User, Lock, ChevronLeft, Search, Check, Minus, Plus, Share2, Download, Sun, Moon, BookOpen, Pencil, X, Sparkles, Save, Volume2, Play, Pause, Square, FileAudio, Upload, FileText, Image as ImageIcon, MessageCircle, Heart, Send, Settings, Bell, Palette, ShieldCheck, Info, ChevronRight, LogOut } from "lucide-react";import Admin from "./Admin.jsx";
-const recoveredArticle=(id,n,tag,minutes,locked,title,summary,language="all")=>({id,n:String(n).padStart(2,"0"),tag,minutes,locked:!!locked,published:true,language,cover_image:"",has_pdf:false,audio_generated:false,zh:[title,summary],fr:[title,summary],en:[title,summary],content:{zh:summary,fr:summary,en:summary}});
+const articleCoverSources={
+  18:"https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1699654492i/198530372.jpg",
+  17:"https://i1.rgstatic.net/publication/378122729_Text-to-Image_Synthesis_with_Generative_Models_Methods_Datasets_Performance_Metrics_Challenges_and_Future_Direction/links/65c774b579007454976c46eb/largepreview.png",
+  16:"https://artlogic-res.cloudinary.com/w_2000%2Ch_2000%2Cc_limit%2Cf_auto%2Cfl_lossy%2Cq_auto%3Abest/ws-estherschipper2/usr/images/publications/main_image/items/b7/b73e9d58e6e34afaa9b91b84c7241d9c/hs_duty-free_recto_highres.jpg",
+  15:"https://copiona.com/editorial/en-defensa-de-la-imagen-pobre/en-defensa-de-la-imagen-pobre_1140x806.png",
+  14:"https://www.afmuseet.no/content/uploads/2022/02/Artificial-Hells-scaled.jpg",
+  13:"https://yale-press-us.imgix.net/covers/9780300205718.jpg?auto=format&w=1500",
+  12:"https://old.redemmas.org/uploads/edition/cover/8647/opengraph_The-Work-of-Art-in-the-Age-of-Its-Technological-Reproducibility-and-Other-9780674024458.jpg",
+  10:"https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2008/09/atv-1_reentry/9543361-7-eng-GB/ATV-1_reentry_pillars.jpg",
+  9:"https://standardebooks.org/images/covers/andre-gide_the-counterfeiters_dorothy-bussy-95d0e5c9-cover%402x.jpg",
+  8:"https://dynamic.indigoimages.ca/v1/books/books/0262525089/1.jpg?maxHeight=810&quality=85&width=810",
+  7:"https://static09.mulino.it/sitomulino/9788815383174/bookCoverSizeBig/a24166acover38317.jpeg"
+};
+const recoveredArticle=(id,n,tag,minutes,locked,title,summary,language="all")=>({id,n:String(n).padStart(2,"0"),tag,minutes,locked:!!locked,published:true,language,cover_image:articleCoverSources[id]||"",has_pdf:false,audio_generated:false,zh:[title,summary],fr:[title,summary],en:[title,summary],content:{zh:summary,fr:summary,en:summary}});
 const fallbackItems=[
  recoveredArticle(18,11,"PHILOSOPHIE",58,true,"雅克·朗西埃，《艺术旅行》（Les Voyages de l’art）“21世纪书库” 丛书，巴黎：勒瑟伊出版社（Le Seuil），2023年","艺术被确立为一种独立的经验领域，并进入博物馆和音乐厅的同时，也被要求走出自身，成为某种超越艺术的东西。音乐试图成为精神的语言或未来的戏剧；建筑不再只建造房屋，而是试图创造一个新世界；革命艺术家不再只制作绘画，而是塑造新生活的形式。当代艺术的行为和装置，则处在艺术与政治、内部与外部之间模糊的边界上。雅克·朗西埃通过考察这些“艺术之旅”，说明康德和黑格尔等思想家如何帮助我们理解艺术发展的曲折道路。主题：美学、艺术哲学、艺术史、音乐学。","en"),
  recoveredArticle(17,10,"Art contemporain",45,false,"生成式共觉：文本生成图像 AI 对艺术生产力、创意新颖性与价值分配的重塑","随着 Midjourney、Stable Diffusion、DALL-E 等文本生成图像人工智能进入数字艺术生产，人类创造力所依赖的技能结构、生产方式与价值评价机制正在发生变化。本文以 Zhou 与 Lee（2024）发表于 PNAS Nexus 的实证研究为核心，结合创造力心理学、人机协作、设计固着、创意多样性与艺术社会学，讨论生成式 AI 引发的艺术生产范式转型。研究显示，AI 可以提高个体生产率与作品价值，却可能压缩群体层面的创意多样性。","fr"),
