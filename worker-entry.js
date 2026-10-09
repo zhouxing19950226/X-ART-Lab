@@ -5,7 +5,6 @@ import { onRequestGet as getCommunity, onRequestPost as postCommunity } from "./
 import { onRequestGet as getCommunityAdmin, onRequestPost as postCommunityAdmin } from "./functions/api/community-admin.js";
 import { onRequestPost as postCheckout } from "./functions/api/create-checkout-session.js";
 import { onRequestPost as postDocumentAnalysis } from "./functions/api/document-analysis.js";
-import { onRequestGet as getAndroid } from "./functions/api/download-android.js";
 import { onRequestPost as postAudio } from "./functions/api/generate-audio.js";
 import { onRequestPost as postImportPdf } from "./functions/api/import-pdf.js";
 import { onRequestGet as getMembers, onRequestPost as postMembers, onRequestDelete as deleteMembers } from "./functions/api/members.js";
@@ -16,6 +15,9 @@ import { onRequestGet as getUsers } from "./functions/api/users.js";
 import { onRequestGet as getCheckout } from "./functions/api/verify-checkout-session.js";
 
 const workerProbe = () => new Response(JSON.stringify({ ok: true, worker: "pages" }), { headers: { "content-type": "application/json" } });
+
+const getAndroid = context => import("./functions/api/download-android.js")
+  .then(({ onRequestGet }) => onRequestGet(context));
 
 const routes = new Map([
   ["GET /api/__worker_probe", workerProbe],
