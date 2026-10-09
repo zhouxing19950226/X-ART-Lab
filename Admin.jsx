@@ -682,7 +682,7 @@ export default function Admin() {
         adminApi(`community-admin?t=${Date.now()}`),
         adminApi(`system-status?t=${Date.now()}`),
       ]);
-      setItems(data.articles);      setArchives(archiveData.archives || []);
+      setItems(Array.isArray(data.articles) ? data.articles : []);      setArchives(archiveData.archives || []);
       setMembers(memberData.members || []);
       setMeta(data.meta || { communityPosts: 0, services: {} });
       setManagedCategories(cats.categories || []);
