@@ -1,6 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Compass, BookMarked, Bookmark, CreditCard, User, Lock, ChevronLeft, Search, Check, Minus, Plus, Share2, Download, Sun, Moon, BookOpen, Pencil, X, Sparkles, Save, Volume2, Play, Pause, Square, FileAudio, Upload, FileText, Image as ImageIcon, MessageCircle, Heart, Send, Settings, Bell, Palette, ShieldCheck, Info, ChevronRight, Menu, LogOut } from "lucide-react";import Admin from "./Admin.jsx";
-const recoveredArticle=(id,n,tag,minutes,locked,title,summary,language="all")=>({id,n:String(n).padStart(2,"0"),tag,minutes,locked:!!locked,published:true,language,cover_image:"",has_pdf:false,audio_generated:false,zh:[title,summary],fr:[title,summary],en:[title,summary],content:{zh:summary,fr:summary,en:summary}});
+const articleCoverSources={
+  18:"/article-covers/ranciere-les-voyages.jpg",
+  17:"/article-covers/generative-ai.png",
+  16:"/article-covers/duty-free-art.jpg",
+  15:"/article-covers/poor-image.png",
+  14:"/article-covers/artificial-hells.jpg",
+  13:"/article-covers/what-art-is.jpg",
+  12:"/article-covers/benjamin-work-art.jpg",
+  10:"/article-covers/return-test.jpg",
+  9:"/article-covers/counterfeiters.jpg",
+  8:"/article-covers/groys-history-becomes-form.jpg",
+  7:"/article-covers/coccia-sensibile.jpg"
+};
+const recoveredArticle=(id,n,tag,minutes,locked,title,summary,language="all")=>({id,n:String(n).padStart(2,"0"),tag,minutes,locked:!!locked,published:true,language,cover_image:articleCoverSources[id]||"",has_pdf:false,audio_generated:false,zh:[title,summary],fr:[title,summary],en:[title,summary],content:{zh:summary,fr:summary,en:summary}});
 const fallbackItems=[
  recoveredArticle(18,11,"PHILOSOPHIE",58,true,"雅克·朗西埃，《艺术旅行》（Les Voyages de l’art）“21世纪书库” 丛书，巴黎：勒瑟伊出版社（Le Seuil），2023年","艺术被确立为一种独立的经验领域，并进入博物馆和音乐厅的同时，也被要求走出自身，成为某种超越艺术的东西。音乐试图成为精神的语言或未来的戏剧；建筑不再只建造房屋，而是试图创造一个新世界；革命艺术家不再只制作绘画，而是塑造新生活的形式。当代艺术的行为和装置，则处在艺术与政治、内部与外部之间模糊的边界上。雅克·朗西埃通过考察这些“艺术之旅”，说明康德和黑格尔等思想家如何帮助我们理解艺术发展的曲折道路。主题：美学、艺术哲学、艺术史、音乐学。","en"),
  recoveredArticle(17,10,"Art contemporain",45,false,"生成式共觉：文本生成图像 AI 对艺术生产力、创意新颖性与价值分配的重塑","随着 Midjourney、Stable Diffusion、DALL-E 等文本生成图像人工智能进入数字艺术生产，人类创造力所依赖的技能结构、生产方式与价值评价机制正在发生变化。本文以 Zhou 与 Lee（2024）发表于 PNAS Nexus 的实证研究为核心，结合创造力心理学、人机协作、设计固着、创意多样性与艺术社会学，讨论生成式 AI 引发的艺术生产范式转型。研究显示，AI 可以提高个体生产率与作品价值，却可能压缩群体层面的创意多样性。","fr"),
@@ -384,7 +397,7 @@ export default function App(){
   useEffect(()=>{writeLocal("xart-language",lang);document.documentElement.lang=lang==="zh"?"zh-CN":lang},[lang]);
   useEffect(()=>{
     let active=true;
-    const syncMembership=async()=>{try{const client=getAuthClient(),result=client?await client.auth.getSession():null,session=result?.data?.session;if(!session){if(active)setMemberAccess(false);return}const response=await fetch("/api/members?t="+Date.now(),{cache:"no-store",headers:{Authorization:"Bearer "+session.access_token}}),data=await response.json().catch(()=>({}));if(active){setMemberAccess(Boolean(response.ok&&data.active));if(response.ok&&data.active)setSubscribed(true)}}catch{if(active)setMemberAccess(false)}};syncMembership();const syncArticles=()=>fetch(`/api/articles?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&data.articles?.length)setItems(data.articles.map(p=>({id:p.id,n:p.n,tag:p.tag,minutes:p.minutes,locked:p.locked,language:p.language||"all",cover_image:p.cover_image||"",has_pdf:Boolean(p.has_pdf),pdf_name:p.pdf_name||"",pdf_size:Number(p.pdf_size)||0,audio_generated:Boolean(p.audio_generated),zh:[p.zh_title,p.zh_summary],fr:[p.fr_title,p.fr_summary],en:[p.en_title,p.en_summary],content:{zh:p.zh_content,fr:p.fr_content,en:p.en_content}})))}).catch(()=>{});
+    const syncMembership=async()=>{try{const client=getAuthClient(),result=client?await client.auth.getSession():null,session=result?.data?.session;if(!session){if(active)setMemberAccess(false);return}const response=await fetch("/api/members?t="+Date.now(),{cache:"no-store",headers:{Authorization:"Bearer "+session.access_token}}),data=await response.json().catch(()=>({}));if(active){setMemberAccess(Boolean(response.ok&&data.active));if(response.ok&&data.active)setSubscribed(true)}}catch{if(active)setMemberAccess(false)}};syncMembership();const syncArticles=()=>fetch(`/api/articles?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&data.articles?.length)setItems(data.articles.map(p=>({id:p.id,n:p.n,tag:p.tag,minutes:p.minutes,locked:p.locked,language:p.language||"all",cover_image:p.cover_image||articleCoverSources[p.id]||"",has_pdf:Boolean(p.has_pdf),pdf_name:p.pdf_name||"",pdf_size:Number(p.pdf_size)||0,audio_generated:Boolean(p.audio_generated),zh:[p.zh_title,p.zh_summary],fr:[p.fr_title,p.fr_summary],en:[p.en_title,p.en_summary],content:{zh:p.zh_content,fr:p.fr_content,en:p.en_content}})))}).catch(()=>{});
     const resume=()=>{if(document.visibilityState==="visible")syncArticles()};
     syncArticles();
     document.addEventListener("visibilitychange",resume);
