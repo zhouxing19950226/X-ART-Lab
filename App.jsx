@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+// Keep the original D1-backed article path; archive additions remain separate.
 import { Compass, BookMarked, Bookmark, CreditCard, User, Lock, ChevronLeft, Search, Check, Minus, Plus, Share2, Download, Sun, Moon, BookOpen, Pencil, X, Sparkles, Save, Volume2, Play, Pause, Square, FileAudio, Upload, FileText, Image as ImageIcon, MessageCircle, Heart, Send, Settings, Bell, Palette, ShieldCheck, Info, ChevronRight, Menu, LogOut } from "lucide-react";import Admin from "./Admin.jsx";
 const recoveredArticle=(id,n,tag,minutes,locked,title,summary,language="all")=>({id,n:String(n).padStart(2,"0"),tag,minutes,locked:!!locked,published:true,language,cover_image:"",has_pdf:false,audio_generated:false,zh:[title,summary],fr:[title,summary],en:[title,summary],content:{zh:summary,fr:summary,en:summary}});
 const fallbackItems=[
