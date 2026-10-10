@@ -13,6 +13,18 @@ const articleCoverSources={
   8:"/article-covers/groys-history-becomes-form.jpg",
   7:"/article-covers/coccia-sensibile.jpg"
 };
+const articleCoverByArticleNumber={
+  11:"/article-covers/ranciere-les-voyages.jpg",
+  10:"/article-covers/generative-ai.png",
+  9:"/article-covers/duty-free-art.jpg",
+  8:"/article-covers/poor-image.png",
+  6:"/article-covers/what-art-is.jpg",
+  5:"/article-covers/benjamin-work-art.jpg",
+  4:"/article-covers/return-test.jpg",
+  3:"/article-covers/counterfeiters.jpg",
+  2:"/article-covers/groys-history-becomes-form.jpg",
+  1:"/article-covers/coccia-sensibile.jpg"
+};
 const recoveredArticle=(id,n,tag,minutes,locked,title,summary,language="all")=>({id,n:String(n).padStart(2,"0"),tag,minutes,locked:!!locked,published:true,language,cover_image:articleCoverSources[id]||"",has_pdf:false,audio_generated:false,zh:[title,summary],fr:[title,summary],en:[title,summary],content:{zh:summary,fr:summary,en:summary}});
 const fallbackItems=[
  recoveredArticle(18,11,"PHILOSOPHIE",58,true,"雅克·朗西埃，《艺术旅行》（Les Voyages de l’art）“21世纪书库” 丛书，巴黎：勒瑟伊出版社（Le Seuil），2023年","艺术被确立为一种独立的经验领域，并进入博物馆和音乐厅的同时，也被要求走出自身，成为某种超越艺术的东西。音乐试图成为精神的语言或未来的戏剧；建筑不再只建造房屋，而是试图创造一个新世界；革命艺术家不再只制作绘画，而是塑造新生活的形式。当代艺术的行为和装置，则处在艺术与政治、内部与外部之间模糊的边界上。雅克·朗西埃通过考察这些“艺术之旅”，说明康德和黑格尔等思想家如何帮助我们理解艺术发展的曲折道路。主题：美学、艺术哲学、艺术史、音乐学。","en"),
@@ -410,7 +422,7 @@ export default function App(){
   useEffect(()=>{writeLocal("xart-language",lang);document.documentElement.lang=lang==="zh"?"zh-CN":lang},[lang]);
   useEffect(()=>{
     let active=true;
-    const syncMembership=async()=>{try{const client=getAuthClient(),result=client?await client.auth.getSession():null,session=result?.data?.session;if(!session){if(active)setMemberAccess(false);return}const response=await fetch("/api/members?t="+Date.now(),{cache:"no-store",headers:{Authorization:"Bearer "+session.access_token}}),data=await response.json().catch(()=>({}));if(active){setMemberAccess(Boolean(response.ok&&data.active));if(response.ok&&data.active)setSubscribed(true)}}catch{if(active)setMemberAccess(false)}};syncMembership();const syncArticles=()=>fetch(`/api/articles?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&data.articles?.length)setItems(data.articles.map(p=>({id:p.id,n:p.n,tag:p.tag,minutes:p.minutes,locked:p.locked,language:p.language||"all",cover_image:p.cover_image||articleCoverSources[p.id]||"",has_pdf:Boolean(p.has_pdf),pdf_name:p.pdf_name||"",pdf_size:Number(p.pdf_size)||0,audio_generated:Boolean(p.audio_generated),zh:[p.zh_title,p.zh_summary],fr:[p.fr_title,p.fr_summary],en:[p.en_title,p.en_summary],content:{zh:p.zh_content,fr:p.fr_content,en:p.en_content}})))}).catch(()=>{});
+    const syncMembership=async()=>{try{const client=getAuthClient(),result=client?await client.auth.getSession():null,session=result?.data?.session;if(!session){if(active)setMemberAccess(false);return}const response=await fetch("/api/members?t="+Date.now(),{cache:"no-store",headers:{Authorization:"Bearer "+session.access_token}}),data=await response.json().catch(()=>({}));if(active){setMemberAccess(Boolean(response.ok&&data.active));if(response.ok&&data.active)setSubscribed(true)}}catch{if(active)setMemberAccess(false)}};syncMembership();const syncArticles=()=>fetch(`/api/articles?t=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(data=>{if(active&&data.articles?.length)setItems(data.articles.map(p=>({id:p.id,n:p.n,tag:p.tag,minutes:p.minutes,locked:p.locked,language:p.language||"all",cover_image:p.cover_image||articleCoverSources[p.id]||articleCoverByArticleNumber[p.n]||"",has_pdf:Boolean(p.has_pdf),pdf_name:p.pdf_name||"",pdf_size:Number(p.pdf_size)||0,audio_generated:Boolean(p.audio_generated),zh:[p.zh_title,p.zh_summary],fr:[p.fr_title,p.fr_summary],en:[p.en_title,p.en_summary],content:{zh:p.zh_content,fr:p.fr_content,en:p.en_content}})))}).catch(()=>{});
     const resume=()=>{if(document.visibilityState==="visible")syncArticles()};
     syncArticles();
     document.addEventListener("visibilitychange",resume);
