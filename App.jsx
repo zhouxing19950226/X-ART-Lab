@@ -22,7 +22,8 @@ const fallbackArchives=[
   {id:"archive-nairy",slug:"nairy-baghramian",language:"all",published:true,sort_order:1,cover_image:"/archive-covers/hero-met-facade.jpg",title:"Nairy Baghramian",summary:"作品、展览、评论与访谈。",page_url:"https://nairy-baghramian-research-archive.zhangchengyu810857.chatgpt.site/"},
   {id:"archive-ho-tzu-nyen",slug:"ho-tzu-nyen",language:"all",published:true,sort_order:2,cover_image:"/archive-covers/ho-tzu-nyen.jpg",title:"Ho Tzu Nyen",summary:"作品、展览、视频访谈与评论。",page_url:"https://ho-tzu-nyen-artist-archive.zhangchengyu810857.chatgpt.site/"},
   {id:"archive-philippe-parreno",slug:"philippe-parreno",language:"all",published:true,sort_order:3,cover_image:"/archive-covers/philippe-parreno.png",title:"Philippe Parreno",summary:"作品、展览、访谈与机构资料。",page_url:"https://philippe-parreno-references.zhangchengyu810857.chatgpt.site/"},
-  {id:"archive-yu-ji",slug:"yu-ji",language:"all",published:true,sort_order:4,cover_image:"https://zhouxing1995.github.io/Yu_Ji_Research_Archive/flesh_stone_2025.webp",title:"于吉 / Yu Ji",summary:"作品、材料实践、展览与评论。",summary_zh:"作品、材料实践、展览与评论。",summary_en:"Works, material practice, exhibitions and criticism.",summary_fr:"Œuvres, pratique matérielle, expositions et critiques.",page_url:"https://zhouxing1995.github.io/Yu_Ji_Research_Archive/?lang=zh"}
+  {id:"archive-yu-ji",slug:"yu-ji",language:"all",published:true,sort_order:4,cover_image:"https://zhouxing1995.github.io/Yu_Ji_Research_Archive/flesh_stone_2025.webp",title:"于吉 / Yu Ji",summary:"作品、材料实践、展览与评论。",summary_zh:"作品、材料实践、展览与评论。",summary_en:"Works, material practice, exhibitions and criticism.",summary_fr:"Œuvres, pratique matérielle, expositions et critiques.",page_url:"https://zhouxing1995.github.io/Yu_Ji_Research_Archive/?lang=zh"},
+  {id:"archive-anri-sala",slug:"anri-sala",language:"all",published:true,sort_order:5,cover_image:"/archive-covers/anri-sala.jpg",title:"安里·萨拉 / Anri Sala",summary:"作品、展览、访谈与机构文本。",summary_zh:"作品、展览、访谈与机构文本。",summary_en:"Works, exhibitions, interviews and institutional texts.",summary_fr:"Œuvres, expositions, entretiens et textes institutionnels.",page_url:"/archives/anri-sala/index.html#profile"}
 ];
 const mergeArchives=remote=>{
   const incoming=Array.isArray(remote)?remote:[];
@@ -32,10 +33,13 @@ const mergeArchives=remote=>{
     if(/ho[\s_-]*tzu[\s_-]*nyen|何子彦/.test(text))return "ho-tzu-nyen";
     if(/philippe[\s_-]*parreno|parreno/.test(text))return "philippe-parreno";
     if(/yu[\s_-]*ji|于吉/.test(text))return "yu-ji";
+    if(/anri[\s_-]*sala|安里[·・\s_-]*萨拉/.test(text))return "anri-sala";
     return text.trim()||String(archive?.id||"").toLowerCase();
   };
   const merged=new Map(incoming.map(archive=>[key(archive),archive]));
-  return fallbackArchives.map(archive=>{const existing=merged.get(key(archive));return existing?{...archive,...existing,cover_image:existing.cover_image||archive.cover_image,summary_zh:existing.summary_zh||archive.summary_zh,summary_en:existing.summary_en||archive.summary_en,summary_fr:existing.summary_fr||archive.summary_fr}:archive;});
+  const fallback=fallbackArchives.map(archive=>{const existing=merged.get(key(archive));return existing?{...archive,...existing,cover_image:existing.cover_image||archive.cover_image,summary_zh:existing.summary_zh||archive.summary_zh,summary_en:existing.summary_en||archive.summary_en,summary_fr:existing.summary_fr||archive.summary_fr}:archive;});
+  const known=new Set(fallback.map(archive=>key(archive)));
+  return [...fallback,...incoming.filter(archive=>!known.has(key(archive)))];
 };
 const ink="#141311", paper="#FFFFFF", red="#C81E1E", muted="#77746C", hairline="#E7E5DF";
 const readLocal=(key,fallback="")=>{try{return localStorage.getItem(key)??fallback}catch{return fallback}};const writeLocal=(key,value)=>{try{localStorage.setItem(key,String(value))}catch{}};
