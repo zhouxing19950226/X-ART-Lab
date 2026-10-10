@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && wrangler pages functions build functions --project-directory . --outfile dist/_worker.js --output-routes-path dist/_routes.json --build-output-directory dist --minify=true",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler pages deploy dist --project-name=gewu-app"
   },
